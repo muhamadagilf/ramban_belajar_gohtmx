@@ -1,0 +1,182 @@
+{{ block "student-submission" . }}
+<!DOCTYPE html>
+<html class="font-mono">
+      {{ template "head" . }}
+      <title>Student Submission</title>
+      <body class="flex flex-col justify-center items-center bg-[#ffffff] gap-y-[1rem] w-[100%]">
+            {{ template "loader" . }}
+            <div id="wrapper-content" class="wrapper-content w-[70%] mt-[3rem] flex flex-col">
+                  {{ template "student-form" . }}
+            </div>
+            <script>
+                  const checkbox = document.getElementById("agreeCheck");
+                  const submitBtn = document.getElementById("submitBtn");
+
+                  checkbox.addEventListener("change", () => {
+                        submitBtn.disabled = false;
+                        submitBtn.classList.toggle("bg-blue-700", true);
+                        submitBtn.classList.toggle("hover:bg-blue-800", true);
+                        submitBtn.classList.toggle("cursor-pointer", true);
+                        submitBtn.classList.toggle("cursor-not-allowed", false);
+                        submitBtn.classList.toggle("bg-gray-400", false);
+                  });
+            </script>
+      </body>
+</html>
+{{ end }}
+
+{{ block "student-form" . }}
+<form
+  class="student flex flex-col gap-y-[1rem]"
+  hx-POST="/students/submission"
+  hx-indicator="#loader-indicator"
+>
+  <div class="top-section flex flex-col gap-y-[1rem]">
+    <div class="top-inpts flex gap-x-[.8rem]">
+      <div class="email-section flex flex-col w-[50%]">
+        <label for="email">Email</label>
+        <input
+          required
+          type="email"
+          name="email"
+          id="email"
+          placeholder="example@example.com"
+          class="border border-gray-400 p-[2px] pl-[.5rem] rounded shadow-sm outline-none"
+        />
+      </div>
+      <div class="major-section flex flex-col w-[50%]">
+        <label for="major">Major</label>
+        <select
+          name="major"
+          id="major"
+          class="h-[1.82rem] border border-gray-400 p-[2px] px-[.5rem] cursor-pointer rounded shadow-sm outline-none capitalize"
+        >
+          {{ range .Major }}
+          <option value="{{ . }}">{{ . }}</option>
+          {{ end }}
+        </select>
+      </div>
+    </div>
+    <div class="bottom-inpts flex gap-x-[.8rem]">
+      <div class="name-section w-[45%] flex flex-col">
+        <label for="name">Fullname</label>
+        <input
+          required
+          type="text"
+          name="name"
+          id="name"
+          class="border border-gray-400 p-[2px] pl-[.5rem] rounded shadow-sm outline-none"
+        />
+      </div>
+      <div class="phone-section w-[45%] flex flex-col">
+        <label for="phone">Phone</label>
+        <input
+          required
+          type="tel"
+          name="phone"
+          id="phone"
+          placeholder="+6289341468953"
+          pattern="+62[0-9]{12}"
+          class="border border-gray-400 p-[2px] pl-[.5rem] rounded shadow-sm outline-none"
+        />
+      </div>
+      <div class="nip-section w-[45%] flex flex-col">
+        <label for="nip">Nomer Induk Pengguna</label>
+        <input
+          type="text"
+          name="nip"
+          id="nip"
+          class="border border-gray-400 p-[2px] pl-[.5rem] rounded shadow-sm outline-none"
+        />
+      </div>
+    </div>
+  </div>
+  <div class="t-and-c text-[.75rem] pl-[1.5rem] mt-[1rem]">
+    <ul
+      class="flex justify-between gap-x-[2.2rem] list-decimal text-justify underline"
+    >
+      <div class="w-[50%]">
+        <li>
+          The information provided in this form is true, accurate, and complete
+          to the best of my knowledge.
+        </li>
+        <li>
+          I understand that any false or misleading information may result in
+          the rejection of my submission or further disciplinary action as per
+          college regulations.
+        </li>
+        <li>
+          I agree to comply with all academic and administrative policies of the
+          college related to semester registration and submissions.
+        </li>
+      </div>
+      <div class="w-[50%]">
+        <li>
+          I acknowledge that the college reserves the right to verify the
+          details submitted and request additional documentation if necessary.
+        </li>
+        <li>
+          I accept that late submissions may be subject to penalties or may not
+          be accepted, in accordance with the deadlines set by the college.
+        </li>
+      </div>
+    </ul>
+  </div>
+  <div class="check-tc flex items-center gap-x-[.5rem] w-[50%]">
+    <input type="checkbox" name="check" id="agreeCheck" />
+    <p class="text-[.75rem]">
+      I have read and understood the Terms & Conditions and agree to abide by
+      them.
+    </p>
+  </div>
+  <div class="btns w-[100%] flex gap-x-[.8rem]">
+    <button
+      id="submitBtn"
+      type="submit"
+      class="bg-gray-400 text-white py-[.1rem] px-[.5rem] text-[.9rem] rounded shadow-md cursor-not-allowed"
+      disabled
+    >
+      Submit
+    </button>
+    <button type="reset">Reset</button>
+  </div>
+</form>
+{{ end }}
+
+{{ block "submission-succeed"  . }}
+<div
+      id="wrapper-content"
+      class="wrapper-content w-[50%] flex flex-col gap-y-[.8rem] mt-[1.5rem] font-semibold font-sans text-[.7rem]"
+      hx-swap-oob="outerHTML">
+      <div
+            class="message border border-green-600 bg-green-300 text-green-800
+            p-[.6rem] px-[1.2rem] rounded shadow-sm flex justify-center "
+      >
+            {{ .Message }}
+      </div>
+      <div
+            class="student border border-blue-600 bg-blue-300 text-blue-800
+            p-[.6rem] px-[1.2rem] rounded shadow-sm flex gap-x-[.8rem]"
+      >
+            <div>
+                  <p class="name uppercase">{{ .Student.Name }}</p>
+                  <p class="nim">Nim: {{ .Student.Nim }}</p>
+                  <p class="email">Email: {{ .Student.Email }}</p>
+            </div>
+            <div>
+                  <p class="major">{{ .MoreStudentInfo.StudyPlan.Major }}</p>
+                  <p class="Semester">Semester {{ .MoreStudentInfo.StudyPlan.Semester }}</p>
+                  <p class="room">{{ .MoreStudentInfo.Room.Name }}</p>
+            </div>
+
+      </div>
+      <button
+            onclick="window.location.reload(true)"
+            class="back-refresh flex gap-x-[.5rem] shadow-sm text-[.7rem] w-fit rounded cursor-pointer
+            items-center px-[.8rem] py-[.3rem] bg-green-400 text-green-800 border border-green-600"
+      >
+            <i class="fa-solid fa-arrow-left"></i>
+            <span>Back</span>
+      </button>
+</div>
+{{ end  }}

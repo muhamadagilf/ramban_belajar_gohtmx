@@ -1,0 +1,20 @@
+{{ block "error-message" . }}
+<div hx-swap-oob="innerHTML:#wrapper-content">
+      <div class="wrapper-message flex flex-col gap-y-[.5rem]">
+            <div
+                  class="message border border-red-600 bg-red-400 text-[.8rem] font-semibold
+                  text-red-800 p-[.6rem] px-[1.2rem] rounded shadow-sm mt-[1rem] items-center content-around"
+            >
+                  <p class="uppercase">{{ .Message }}</p>
+            </div>
+            <button
+                  onclick="window.location.reload(true)"
+                  class="back-refresh flex gap-x-[.5rem] shadow-sm text-[.7rem] w-fit rounded cursor-pointer
+                  items-center px-[.8rem] py-[.3rem] border border-gray-300 hover:bg-[#0000003a] transition"
+            >
+                  <i class="fa-solid fa-arrow-left"></i>
+                  <span>Back</span>
+            </button>
+      </div>
+</div>
+{{ end }}

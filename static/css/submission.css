@@ -1,0 +1,110 @@
+* {
+    font-family: monospace;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: whitesmoke;
+}
+
+body .wrapper {
+    width: 70%;
+    margin-block: 3.5rem;
+}
+
+form.student {
+    display: flex;
+    flex-direction: column;
+    row-gap: 1rem;
+}
+
+form.student .top-inpts,
+form.student .bottom-inpts {
+    display: flex;
+    column-gap: .8rem;
+}
+
+div.top-inpts > div {
+    display: flex;
+    flex-direction: column;
+    width: 50%;
+}
+
+div.bottom-inpts > div {
+    display: flex;
+    flex-direction: column;
+    width: 45%;
+}
+
+form.student input,
+form.student select {
+    border: 1px solid gray;
+    padding: 2px;
+    outline: none;
+    border-radius: 2px;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1),
+             0 1px 2px -1px rgba(0, 0, 0, 0.1);
+}
+
+form.student input {
+    padding-left: .5rem;
+}
+
+form.student select.major-section {
+    height: 1.82rem;
+}
+
+div.t-and-c {
+    font-size: .75rem;
+    padding-left: 1.5rem;
+    margin-top: 1rem;
+}
+
+
+div.t-and-c ul {
+    display: flex;
+    justify-content: space-between;
+    column-gap: 2.2rem;
+    list-style-type: decimal;
+    text-align: justify;
+    text-decoration: underline;
+}
+
+ul > div  {
+    width: 50%;
+}
+
+div.check-tc {
+    display: flex;
+    align-items: center;
+    column-gap: .5rem;
+    width: 50%;
+}
+
+div.check-tc > p {
+    font-size: .75rem;
+}
+
+div.btns  {
+    width: 100%;
+    display: flex;
+    column-gap: .8rem;
+}
+
+div.btns > button[type="submit"] {
+    color: white;
+    padding-block: .1rem;
+    padding-inline: .5rem;
+    background: rgb(8, 67, 123);
+    font-size: .9rem;
+    border-radius: 2px;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1),
+             0 1px 2px -1px rgba(0, 0, 0, 0.1);
+}
+
+
+div.btns > button[type="submit"]:hover {
+    background: rgb(7, 54, 98);
+}

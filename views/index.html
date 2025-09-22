@@ -1,0 +1,24 @@
+{{ block "index" . }}
+<!DOCTYPE html>
+<html>
+    {{ template "head" . }}
+    <title>Home</title>
+      <body class="flex justify-center">
+            <div class="wrapper-content font-semibold
+            flex gap-x-[.8rem] mt-[1.5rem] items-baseline">
+                  <a
+                  class="text-[.7rem] px-[1rem] py-[.7rem]
+                  bg-blue-400 border-1 rounded shadow-md border-blue-800 text-blue-800 block"
+                  href="#">/home</a>
+                  <a
+                  class="text-[.8rem] px-[1rem] py-[.7rem]
+                  bg-blue-400 border-1 rounded shadow-md border-blue-800 text-blue-800 block"
+                  href="/students">/students</a>
+                  <a
+                  class="text-[.8rem] px-[1rem] py-[.7rem]
+                  bg-blue-400 border-1 rounded shadow-md border-blue-800 text-blue-800 block"
+                  href="/students/submission">/students/submission</a>
+            </div>
+      </body>
+</html>
+{{ end }}

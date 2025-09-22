@@ -1,0 +1,53 @@
+{{ block "students" . }}
+<!DOCTYPE html>
+<html>
+  {{ template "head" . }}
+  <title>Students</title>
+  <body class="flex flex-col content-center items-center">
+    {{ template "loader" . }}
+    <div id="wrapper-content" class="wrapper-content mt-[1.5rem] w-[50%]">
+      {{ template "students-content" . }}
+    </div>
+  </body>
+</html>
+{{ end }}
+
+{{ block "students-content" . }}
+<div id="students" class="flex flex-col gap-[.5rem]">
+  {{ range $i, $v := .Students }}
+  <div
+    id="student-{{ .ID }}"
+    class="bg-blue-300 border border-blue-600 text-blue-800 rounded shadow-sm
+    p-[.8rem] text-[.7rem] flex gap-[.8rem] [&_p]:font-semibold"
+  >
+    <div class="w-[45%]">
+      <p class="uppercase">{{ $v.Name }}</p>
+      <p>NIM: {{ $v.Nim }}</p>
+      <p>Email: {{ $v.Email }}</p>
+      <p>Phone: {{ $v.PhoneNumber }}</p>
+    </div>
+
+    <div class="w-[35%]">
+      <p>{{(index $.Plans $i).Major }}</p>
+      <p>Semester {{(index $.Plans $i).Semester }}</p>
+    </div>
+
+    <div
+      class="btns w-[35%] flex gap-[.8rem] justify-end items-center h-fit
+      mr-[1rem] [&>i]:text-[.8rem] [&>i]:cursor-pointer"
+    >
+      <i
+            class="fa-solid fa-trash hover:text-red-800"
+            hx-DELETE="/students/{{ .ID }}"
+            hx-indicator="#loader-indicator"
+            hx-swap="outerHTML"
+            hx-target="#student-{{ .ID }}"
+      ></i>
+      <a href="student/{{ .ID }}">
+            <i class="fa-solid fa-user-pen"></i>
+      </a>
+    </div>
+  </div>
+  {{ end }}
+</div>
+{{ end }}

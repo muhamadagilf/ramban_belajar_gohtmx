@@ -1,0 +1,79 @@
+{{ block "update-student" . }}
+<!DOCTYPE html>
+<html>
+    {{ template "head" . }}
+    <title>{{ .Student.Name }}</title>
+    <body class="flex justify-center items-center h-screen bg-[whitesmoke]">
+      {{ template "loader" . }}
+      <div
+            id="wrapper-content"
+            class="wrapper-content w-[90%] h-[80%] flex flex-col gap-y-[1.5rem]
+            rounded shadow-lg bg-[#ffffff] py-[1.5rem] px-[2.5rem]"
+      >
+            <a href="/students"
+                  class="back-refresh flex gap-x-[.5rem] shadow-sm border border-gray-300
+                  text-[.7rem] w-fit rounded cursor-pointer items-center px-[.8rem] py-[.3rem] font-semibold
+                  hover:bg-[#0000003a] transition"
+      >
+                  <i class="fa-solid fa-arrow-left"></i>
+                  <span>Back</span>
+            </a>
+            <div class="wrapper-form flex flex-col gap-y-[1rem] h-[100%]">
+                  <h2 class="font-semibold">/student/update</h2>
+                  <form hx-PUT="/student/{{ .Student.ID }}" hx-indicator="#loader-indicator"
+                  class="update-student h-[inherit] flex flex-col gap-y-[.8rem]">
+                        <div class="input-section flex gap-x-[1rem] [&>div]:h-fit">
+                              <div class="email-section flex flex-col w-[50%] pt-[.3rem] pb-[.5rem] px-[.8rem]
+                                    rounded-md shadow-md border border-gray-400 ">
+                                    <label
+                                          for="email"
+                                          class="text-[.7rem] font-semibold"
+                                    >
+                                           Email</label>
+                                    <input
+                                          class="outline-none text-[.9rem] h-[3.5vh] font-medium"
+                                          type="email" name="email" id="email" value="{{ .Student.Email }}">
+                              </div>
+                              <div class="phone-section flex flex-col w-[50%] pt-[.3rem] pb-[.5rem] px-[.8rem]
+                                    rounded-md shadow-md border border-gray-400  ">
+                                    <label
+                                          for="Phone"
+                                          class="text-[.7rem] font-semibold"
+                                    >
+                                           Phone</label>
+                                    <input
+                                          class="outline-none text-[.9rem] h-[3.5vh] font-medium"
+                                          type="phone" name="phone" id="phone" value="{{ .Student.PhoneNumber }}">
+                              </div>
+                        </div>
+                        <div class="btns">
+                              <button id="saveBtn"
+                                    type="submit"
+                                    class="update-btn bg-gray-600 text-white py-[.3rem] px-[.5rem] text-[.7rem]
+                                    rounded shadow-sm border border-gray-300 w-fit font-semibold disabled cursor-not-allowed">
+                                    Save Changes
+                              </button>
+                        </div>
+                  </form>
+            </div>
+      </div>
+    </body>
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+            const form = document.querySelector("form");
+            const saveBtn = document.getElementById("saveBtn");
+
+            const initialValues = Array.from(form.elements).map(el => el.value)
+            form.addEventListener("input", function () {
+                  const hasChanged = Array.from(form.elements).some((el, i) => el.value !== initialValues[i]);
+                  saveBtn.disabled = !hasChanged;
+                  saveBtn.classList.toggle("bg-blue-600", hasChanged)
+                  saveBtn.classList.toggle("cursor-pointer", hasChanged)
+                  saveBtn.classList.toggle("bg-gray-600", !hasChanged)
+                  saveBtn.classList.toggle("cursor-not-allow", !hasChanged)
+
+            })
+      })
+    </script>
+</html>
+{{ end }}

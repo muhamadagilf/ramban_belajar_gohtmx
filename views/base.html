@@ -1,0 +1,24 @@
+{{ block "head" . }}
+<head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="stylesheet" href="/static/css/loader.css" />
+      <script src="https://unpkg.com/htmx.org/dist/htmx.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+      <script src="https://kit.fontawesome.com/128ce8a98d.js" crossorigin="anonymous"></script>
+      <script src="/static/script/handler_422.js"></script>
+</head>
+{{ end }}
+
+
+{{ block "loader" . }}
+<div id="loader-indicator" class="loader-indicator">
+      <section class="dots-container">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+      </section>
+</div>
+{{ end }}
