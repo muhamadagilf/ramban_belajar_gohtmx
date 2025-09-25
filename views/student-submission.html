@@ -1,146 +1,132 @@
 {{ block "student-submission" . }}
 <!DOCTYPE html>
-<html class="font-mono">
+<html>
       {{ template "head" . }}
       <title>Student Submission</title>
-      <body class="flex flex-col justify-center items-center bg-[#ffffff] gap-y-[1rem] w-[100%]">
+      <body class="flex justify-center items-center h-screen bg-[whitesmoke]">
             {{ template "loader" . }}
-            <div id="wrapper-content" class="wrapper-content w-[70%] mt-[3rem] flex flex-col">
-                  {{ template "student-form" . }}
+            <div
+            id="wrapper-content"
+            class="wrapper-content w-[90%] h-[80%] flex flex-col gap-y-[1rem]
+            rounded shadow-lg bg-[#ffffff] py-[1.5rem] px-[2.5rem]"
+      >
+            <a href="/"
+                  class="back-refresh flex gap-x-[.5rem] shadow-sm border border-gray-300
+                  text-[.7rem] w-fit rounded cursor-pointer items-center px-[.8rem] py-[.3rem] font-semibold
+                  hover:bg-[#0000003a] transition"
+      >
+                  <i class="fa-solid fa-arrow-left"></i>
+                  <span>Back</span>
+            </a>
+            <div class="wrapper-form flex flex-col gap-y-[1rem] h-[100%]">
+                  <h2 class="font-semibold">/student/submission</h2>
+                  <form hx-POST="/students/submission" hx-indicator="#loader-indicator"
+                  class="h-[inherit] flex flex-col gap-y-[.8rem]
+                  [&_label]:text-[.7rem] [&_label]:font-semibold">
+                        <div class="top-inpts flex gap-x-[1rem] [&>.wrapper-inpt]:h-fit">
+                              <div class="wrapper-inpt flex flex-col w-[50%] pt-[.3rem] pb-[.5rem] px-[.8rem]
+                                    rounded-sm shadow-sm border border-gray-300">
+                                    <label for="email">Email</label>
+                                    <input required type="email" name="email" id="email" placeholder="example@example.com"
+                                    class="outline-none text-[.7rem] h-[3vh]"
+                                    />
+                              </div>
+                              <div class="wrapper-inpt flex flex-col w-[50%] pt-[.3rem] pb-[.5rem] px-[.8rem]
+                                    rounded-sm shadow-sm border border-gray-300">
+                                    <label for="major">Major</label>
+                                    <select name="major" id="major"
+                                    class="outline-none text-[.7rem] h-[3vh] font-semibold">
+                                          {{ range .Major }}
+                                          <option value="{{ . }}">{{ . }}</option>
+                                          {{ end }}
+                                    </select>
+                              </div>
+                        </div>
+                        <div class="bottom-inpts flex gap-x-[1rem] [&>.wrapper-inpt]:h-fit">
+                              <div class="wrapper-inpt flex flex-col w-[40%] pt-[.3rem] pb-[.5rem] px-[.8rem]
+                              rounded-sm shadow-sm border border-gray-300">
+                                    <label for="name">Fullname</label>
+                                    <input type="text" name="name" id="name" placeholder="John Doe"
+                                    class="outline-none text-[.7rem] h-[3vh]">
+                              </div>
+                              <div class="wrapper-inpt flex flex-col w-[40%] pt-[.3rem] pb-[.5rem] px-[.8rem]
+                              rounded-sm shadow-sm border border-gray-300">
+                                    <label for="phone">Phone</label>
+                                    <input type="text" name="phone" id="phone" placeholder="+621113334445"
+                                    class="outline-none text-[.7rem] h-[3vh]">
+                              </div>
+                              <div class="wrapper-inpt flex flex-col w-[40%] pt-[.3rem] pb-[.5rem] px-[.8rem]
+                              rounded-sm shadow-sm border border-gray-300">
+                                    <label for="nip">Nomer Induk Pengguna</label>
+                                    <input type="text" name="nip" id="nip"
+                                    class="outline-none text-[.7rem] h-[3vh]">
+                              </div>
+                        </div>
+                        <div class="t-and-c text-[.75rem] pl-[1rem]">
+                              <ul class="flex justify-between gap-x-[2.2rem] list-decimal text-justify underline">
+                                    <div class="w-[50%]">
+                                          <li>
+                                          The information provided in this form is true, accurate, and complete
+                                          to the best of my knowledge.
+                                          </li>
+                                          <li>
+                                          I understand that any false or misleading information may result in
+                                          the rejection of my submission or further disciplinary action as per
+                                          college regulations.
+                                          </li>
+                                          <li>
+                                          I agree to comply with all academic and administrative policies of the
+                                          college related to semester registration and submissions.
+                                          </li>
+                                    </div>
+                                    <div class="w-[50%]">
+                                          <li>
+                                          I acknowledge that the college reserves the right to verify the
+                                          details submitted and request additional documentation if necessary.
+                                          </li>
+                                          <li>
+                                          I accept that late submissions may be subject to penalties or may not
+                                          be accepted, in accordance with the deadlines set by the college.
+                                          </li>
+                                    </div>
+                              </ul>
+                        </div>
+                        <div class="check-tc flex items-center gap-x-[.5rem] w-[50%]">
+                              <input type="checkbox" name="check" id="agreeCheck" />
+                              <p class="text-[.75rem]">
+                                    I have read and understood the Terms & Conditions and agree to abide by
+                                    them.
+                              </p>
+                        </div>
+                        <div class="btns w-fit flex gap-x-[.5rem]">
+                              <button id="submitBtn"
+                                    type="submit"
+                                    class="submitBtn bg-gray-600 text-white py-[.3rem] px-[.5rem] text-[.7rem]
+                                    rounded shadow-sm border border-gray-300 w-fit font-semibold disabled cursor-not-allowed transition">
+                                    Submit
+                              </button>
+                              <button type="reset" class="text-[.8rem] font-semibold cursor-pointer">
+                                    Reset
+                              </button>
+                        </div>
+                  </form>
             </div>
-            <script>
-                  const checkbox = document.getElementById("agreeCheck");
-                  const submitBtn = document.getElementById("submitBtn");
+      </div>
+      <script>
+            const checkbox = document.getElementById("agreeCheck");
+            const submitBtn = document.getElementById("submitBtn");
 
-                  checkbox.addEventListener("change", () => {
-                        submitBtn.disabled = false;
-                        submitBtn.classList.toggle("bg-blue-700", true);
-                        submitBtn.classList.toggle("hover:bg-blue-800", true);
-                        submitBtn.classList.toggle("cursor-pointer", true);
-                        submitBtn.classList.toggle("cursor-not-allowed", false);
-                        submitBtn.classList.toggle("bg-gray-400", false);
-                  });
-            </script>
+            checkbox.addEventListener("change", () => {
+                  submitBtn.disabled = false;
+                  submitBtn.classList.toggle("bg-blue-600", true);
+                  submitBtn.classList.toggle("hover:bg-blue-800", true);
+                  submitBtn.classList.toggle("cursor-pointer", true);
+                  submitBtn.classList.toggle("cursor-not-allowed", false);
+                  submitBtn.classList.toggle("bg-gray-600", false);
+            });
+      </script>
       </body>
 </html>
-{{ end }}
-
-{{ block "student-form" . }}
-<form
-  class="student flex flex-col gap-y-[1rem]"
-  hx-POST="/students/submission"
-  hx-indicator="#loader-indicator"
->
-  <div class="top-section flex flex-col gap-y-[1rem]">
-    <div class="top-inpts flex gap-x-[.8rem]">
-      <div class="email-section flex flex-col w-[50%]">
-        <label for="email">Email</label>
-        <input
-          required
-          type="email"
-          name="email"
-          id="email"
-          placeholder="example@example.com"
-          class="border border-gray-400 p-[2px] pl-[.5rem] rounded shadow-sm outline-none"
-        />
-      </div>
-      <div class="major-section flex flex-col w-[50%]">
-        <label for="major">Major</label>
-        <select
-          name="major"
-          id="major"
-          class="h-[1.82rem] border border-gray-400 p-[2px] px-[.5rem] cursor-pointer rounded shadow-sm outline-none capitalize"
-        >
-          {{ range .Major }}
-          <option value="{{ . }}">{{ . }}</option>
-          {{ end }}
-        </select>
-      </div>
-    </div>
-    <div class="bottom-inpts flex gap-x-[.8rem]">
-      <div class="name-section w-[45%] flex flex-col">
-        <label for="name">Fullname</label>
-        <input
-          required
-          type="text"
-          name="name"
-          id="name"
-          class="border border-gray-400 p-[2px] pl-[.5rem] rounded shadow-sm outline-none"
-        />
-      </div>
-      <div class="phone-section w-[45%] flex flex-col">
-        <label for="phone">Phone</label>
-        <input
-          required
-          type="tel"
-          name="phone"
-          id="phone"
-          placeholder="+6289341468953"
-          pattern="+62[0-9]{12}"
-          class="border border-gray-400 p-[2px] pl-[.5rem] rounded shadow-sm outline-none"
-        />
-      </div>
-      <div class="nip-section w-[45%] flex flex-col">
-        <label for="nip">Nomer Induk Pengguna</label>
-        <input
-          type="text"
-          name="nip"
-          id="nip"
-          class="border border-gray-400 p-[2px] pl-[.5rem] rounded shadow-sm outline-none"
-        />
-      </div>
-    </div>
-  </div>
-  <div class="t-and-c text-[.75rem] pl-[1.5rem] mt-[1rem]">
-    <ul
-      class="flex justify-between gap-x-[2.2rem] list-decimal text-justify underline"
-    >
-      <div class="w-[50%]">
-        <li>
-          The information provided in this form is true, accurate, and complete
-          to the best of my knowledge.
-        </li>
-        <li>
-          I understand that any false or misleading information may result in
-          the rejection of my submission or further disciplinary action as per
-          college regulations.
-        </li>
-        <li>
-          I agree to comply with all academic and administrative policies of the
-          college related to semester registration and submissions.
-        </li>
-      </div>
-      <div class="w-[50%]">
-        <li>
-          I acknowledge that the college reserves the right to verify the
-          details submitted and request additional documentation if necessary.
-        </li>
-        <li>
-          I accept that late submissions may be subject to penalties or may not
-          be accepted, in accordance with the deadlines set by the college.
-        </li>
-      </div>
-    </ul>
-  </div>
-  <div class="check-tc flex items-center gap-x-[.5rem] w-[50%]">
-    <input type="checkbox" name="check" id="agreeCheck" />
-    <p class="text-[.75rem]">
-      I have read and understood the Terms & Conditions and agree to abide by
-      them.
-    </p>
-  </div>
-  <div class="btns w-[100%] flex gap-x-[.8rem]">
-    <button
-      id="submitBtn"
-      type="submit"
-      class="bg-gray-400 text-white py-[.1rem] px-[.5rem] text-[.9rem] rounded shadow-md cursor-not-allowed"
-      disabled
-    >
-      Submit
-    </button>
-    <button type="reset">Reset</button>
-  </div>
-</form>
 {{ end }}
 
 {{ block "submission-succeed"  . }}

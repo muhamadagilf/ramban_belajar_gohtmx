@@ -7,6 +7,8 @@ package database
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 const getStudentRoom = `-- name: GetStudentRoom :many
@@ -40,4 +42,21 @@ func (q *Queries) GetStudentRoom(ctx context.Context, name string) ([]Room, erro
 		return nil, err
 	}
 	return items, nil
+}
+
+const getStudentRoomById = `-- name: GetStudentRoomById :one
+SELECT id, created_at, updated_at, name FROM rooms
+WHERE id = $1
+`
+
+func (q *Queries) GetStudentRoomById(ctx context.Context, id uuid.UUID) (Room, error) {
+	row := q.db.QueryRowContext(ctx, getStudentRoomById, id)
+	var i Room
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Name,
+	)
+	return i, err
 }

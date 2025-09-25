@@ -18,6 +18,13 @@ type Classroom struct {
 	StudentID uuid.UUID
 }
 
+type CollectionMetum struct {
+	ID        uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Name      string
+}
+
 type Room struct {
 	ID        uuid.UUID
 	CreatedAt time.Time

@@ -102,6 +102,3 @@ func isLastModifiedValid(modifiedSince string, lastModified time.Time) bool {
 
 	return err == nil && !lastModified.After(t)
 }
-
-// lm: 14, jan
-// ms: 13, jan

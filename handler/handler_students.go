@@ -73,6 +73,9 @@ func (srv *Server) CreateStudent(c echo.Context) error {
 			return err
 		}
 
+		// update updated_at for Last-Modified Header (caching)
+		qtx.UpdateCollectionMeta(ctx, "students")
+
 		return nil
 	})
 
@@ -111,16 +114,19 @@ func (srv *Server) GetStudentsPage(c echo.Context) error {
 		plans = append(plans, plan)
 	}
 
-	version := students[0].UpdatedAt.Format(time.RFC3339)
-	lastModified := students[0].UpdatedAt
-	eTag := fmt.Sprintf("%x", sha256.Sum256([]byte(version)))
+	lastModified, err := srv.Queries.GetCollectionMeta(c.Request().Context(), "students")
+	if err != nil {
+		return c.String(http.StatusBadRequest, err.Error())
+	}
+
+	ETag := fmt.Sprintf("%x", sha256.Sum256([]byte(lastModified.Format(time.RFC3339))))
 
 	modifiedSince := c.Request().Header.Get("If-Modified-Since")
-	if c.Request().Header.Get("If-None-Match") == eTag || isLastModifiedValid(modifiedSince, lastModified) {
+	if c.Request().Header.Get("If-None-Match") == ETag || isLastModifiedValid(modifiedSince, lastModified) {
 		return c.NoContent(http.StatusNotModified)
 	}
 
-	c.Response().Header().Set("ETag", eTag)
+	c.Response().Header().Set("ETag", ETag)
 	c.Response().Header().Set("Last-Modified", lastModified.UTC().Format(http.TimeFormat))
 	c.Response().Header().Set("Cache-Control", "no-cache")
 
@@ -128,7 +134,7 @@ func (srv *Server) GetStudentsPage(c echo.Context) error {
 }
 
 func (srv *Server) DeleteStudent(c echo.Context) error {
-	time.Sleep(500 * time.Millisecond)
+	time.Sleep(300 * time.Millisecond)
 	ctx := c.Request().Context()
 	err := WithTX(ctx, srv.DB, srv.Queries, func(qtx *database.Queries) error {
 
@@ -144,6 +150,9 @@ func (srv *Server) DeleteStudent(c echo.Context) error {
 			return err
 		}
 
+		// update updated_at for Last-Modified Header (caching)
+		qtx.UpdateCollectionMeta(ctx, "students")
+
 		return nil
 	})
 
@@ -154,7 +163,45 @@ func (srv *Server) DeleteStudent(c echo.Context) error {
 		})
 	}
 
+	c.Response().Header().Set("HX-Redirect", "/students")
 	return c.NoContent(http.StatusOK)
+}
+
+func (srv *Server) GetStudentProfile(c echo.Context) error {
+	idStr := c.Param("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		return c.String(http.StatusBadRequest, err.Error())
+	}
+
+	student, err := srv.Queries.GetStudentById(c.Request().Context(), id)
+	if err != nil {
+		return c.String(http.StatusBadRequest, err.Error())
+	}
+
+	plan, err := srv.Queries.GetStudyPlanById(c.Request().Context(), student.StudyPlanID)
+	if err != nil {
+		return c.String(http.StatusBadRequest, err.Error())
+	}
+
+	room, err := srv.Queries.GetStudentRoomById(c.Request().Context(), student.RoomID)
+	if err != nil {
+		return c.String(http.StatusBadRequest, err.Error())
+	}
+
+	lastModified := student.UpdatedAt
+	ETag := fmt.Sprintf("%x", sha256.Sum256([]byte(lastModified.Format(time.RFC3339))))
+
+	modifiedSince := c.Request().Header.Get("If-Modified-Since")
+	if c.Request().Header.Get("If-None-Match") == ETag || isLastModifiedValid(modifiedSince, lastModified) {
+		return c.NoContent(http.StatusNotModified)
+	}
+
+	c.Response().Header().Set("ETag", ETag)
+	c.Response().Header().Set("Last-Modified", lastModified.UTC().Format(http.TimeFormat))
+	c.Response().Header().Set("Cache-Control", "no-cache")
+
+	return c.Render(http.StatusOK, "student-profile", Data{"Student": student, "Plan": plan, "Room": room})
 }
 
 func (srv *Server) GetUpdateStudentPage(c echo.Context) error {
@@ -201,6 +248,9 @@ func (srv *Server) UpdateStudent(c echo.Context) error {
 		if err != nil {
 			return err
 		}
+
+		// update updated_at for Last-Modified Header (caching)
+		qtx.UpdateCollectionMeta(ctx, "students")
 
 		return nil
 	})

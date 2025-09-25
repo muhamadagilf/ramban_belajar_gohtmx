@@ -3,9 +3,22 @@
 <html>
   {{ template "head" . }}
   <title>Students</title>
-  <body class="flex flex-col content-center items-center">
+  <body class="flex justify-center items-center h-screen bg-[whitesmoke]">
     {{ template "loader" . }}
-    <div id="wrapper-content" class="wrapper-content mt-[1.5rem] w-[50%]">
+    <div
+            id="wrapper-content"
+            class="wrapper-content w-[90%] h-[80%] flex flex-col gap-y-[1rem]
+            rounded shadow-lg bg-[#ffffff] py-[1.5rem] px-[2.5rem]"
+      >
+      <a href="/"
+                  class="back-refresh flex gap-x-[.5rem] shadow-sm border border-gray-300
+                  text-[.7rem] w-fit rounded cursor-pointer items-center px-[.8rem] py-[.3rem] font-semibold
+                  hover:bg-[#0000003a] transition"
+      >
+                  <i class="fa-solid fa-arrow-left"></i>
+                  <span>Back</span>
+            </a>
+      <h2 class="font-semibold">/students</h2>
       {{ template "students-content" . }}
     </div>
   </body>
@@ -13,41 +26,17 @@
 {{ end }}
 
 {{ block "students-content" . }}
-<div id="students" class="flex flex-col gap-[.5rem]">
-  {{ range $i, $v := .Students }}
-  <div
-    id="student-{{ .ID }}"
-    class="bg-blue-300 border border-blue-600 text-blue-800 rounded shadow-sm
-    p-[.8rem] text-[.7rem] flex gap-[.8rem] [&_p]:font-semibold"
-  >
-    <div class="w-[45%]">
-      <p class="uppercase">{{ $v.Name }}</p>
-      <p>NIM: {{ $v.Nim }}</p>
-      <p>Email: {{ $v.Email }}</p>
-      <p>Phone: {{ $v.PhoneNumber }}</p>
-    </div>
-
-    <div class="w-[35%]">
-      <p>{{(index $.Plans $i).Major }}</p>
-      <p>Semester {{(index $.Plans $i).Semester }}</p>
-    </div>
-
-    <div
-      class="btns w-[35%] flex gap-[.8rem] justify-end items-center h-fit
-      mr-[1rem] [&>i]:text-[.8rem] [&>i]:cursor-pointer"
-    >
-      <i
-            class="fa-solid fa-trash hover:text-red-800"
-            hx-DELETE="/students/{{ .ID }}"
-            hx-indicator="#loader-indicator"
-            hx-swap="outerHTML"
-            hx-target="#student-{{ .ID }}"
-      ></i>
-      <a href="student/{{ .ID }}">
-            <i class="fa-solid fa-user-pen"></i>
-      </a>
-    </div>
-  </div>
-  {{ end }}
+<div id="students" class="flex gap-[.8rem] h-[100%] mt-[1rem]">
+      {{ range .Students }}
+            <a href="/student/profile/{{ .ID }}"
+            class="border border-gray-400 shadow-md rounded-md items-center
+                  flex gap-[.8rem] w-[15%] h-fit p-[.5rem] text-[.8rem] font-semibold">
+                  <i class="fa-solid fa-image-portrait text-[3.5rem]"></i>
+                  <div class="snippet flex flex-col gap-[.3rem]">
+                        <p class="name text-wrap leading-none">{{ .Name }}</p>
+                        <p class="nim">{{ .Nim }}</p>
+                  </div>
+            </a>
+      {{ end }}
 </div>
 {{ end }}

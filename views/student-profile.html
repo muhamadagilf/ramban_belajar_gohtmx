@@ -1,0 +1,109 @@
+{{ block "student-profile"  . }}
+<!DOCTYPE html>
+<html>
+  {{ template "head" . }}
+  <title>Students</title>
+  <body class="flex justify-center items-center h-screen bg-[whitesmoke]">
+    {{ template "loader" . }}
+    <div
+            id="wrapper-content"
+            class="wrapper-content w-[90%] h-[80%] flex flex-col gap-y-[1rem]
+            rounded shadow-lg bg-[#ffffff] py-[1.5rem] px-[2.5rem]"
+      >
+      <a href="/students"
+                  class="back-refresh flex gap-x-[.5rem] shadow-sm border border-gray-300
+                  text-[.7rem] w-fit rounded cursor-pointer items-center px-[.8rem] py-[.3rem] font-semibold
+                  hover:bg-[#0000003a] transition"
+      >
+                  <i class="fa-solid fa-arrow-left"></i>
+                  <span>Back</span>
+            </a>
+      <h2 class="font-semibold">/student/profile</h2>
+      <div class="wrapper-profile flex gap-[1rem] mt-[1rem] items-start">
+            <div class="left-section  w-[15%] flex flex-col justify-center items-center [&>div]:w-[100%]
+            gap-[.8rem] [&>div]:p-[.5rem]">
+                  <div class="top-part flex flex-col items-center [&>p]:text-[.7rem] [&>p]:font-semibold
+                        border border-gray-400 shadow-md rounded-md gap-[.5rem]">
+                        <i class="fa-solid fa-circle-user text-[3rem]"></i>
+                        <p class="uppercase leading-none text-center">{{ .Student.Name }}</p>
+                        <p>{{ .Student.Nim }}</p>
+                  </div>
+                  <div class="bottom-part border border-gray-400 shadow-md rounded-md
+                        flex justify-center items-center gap-x-[2rem]">
+                        <a
+                              hx-DELETE="/student/profile/{{ .Student.ID }}"
+                              hx-indicator="#loader-indicator"
+                              class="cursor-pointer color-[red]">
+                              <i class="fa-solid fa-trash-can color-[red] transition"></i>
+                        </a>
+                        <a
+                              href="/student/profile/{{ .Student.ID }}/update">
+                              <i class="fa-solid fa-user-pen"></i>
+                        </a>
+                  </div>
+            </div>
+            <div class="right-section flex gap-[1rem] border border-gray-400 shadow-md rounded-md p-[.5rem]">
+                  <table class="w-full text-sm text-left">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                              <th scope="col" class="px-6 py-3">Data</th>
+                              <th scope="col" class="px-6 py-3">nya</th>
+                        </thead>
+                        <tbody>
+                              <tr>
+                                    <th scope="row" class="px-6 py-4 font-semibold text-gray-900
+                                    whitespace-nowrap
+                                    ">Nomer Induk Pengguna</th>
+                                    <td class="px-6 py-4">{{ .Student.Nip }}</td>
+                              </tr>
+                              <tr>
+                                    <th scope="row" class="px-6 py-4 font-semibold text-gray-900
+                                    whitespace-nowrap
+                                    ">Email</th>
+                                    <td class="px-6 py-4">{{ .Student.Email }}</td>
+                              </tr>
+                              <tr>
+                                    <th scope="row" class="px-6 py-4 font-semibold text-gray-900
+                                    whitespace-nowrap
+                                    ">Phone Number</th>
+                                    <td class="px-6 py-4">{{ .Student.PhoneNumber }}</td>
+                              </tr>
+                              <tr>
+                                    <th scope="row" class="px-6 py-4 font-semibold text-gray-900
+                                    whitespace-nowrap
+                                    ">Year's Class</th>
+                                    <td class="px-6 py-4">{{ .Student.Year }}</td>
+                              </tr>
+                        </tbody>
+                  </table>
+                  <table class="w-full text-sm text-left">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                              <th scope="col" class="px-6 py-3">Study Plan</th>
+                              <th scope="col" class="px-6 py-3">nya</th>
+                        </thead>
+                        <tbody>
+                              <tr>
+                                    <th scope="row" class="px-6 py-4 font-semibold text-gray-900
+                                    whitespace-nowrap
+                                    ">Study</th>
+                                    <td class="px-6 py-4">{{ .Plan.Major }}</td>
+                              </tr>
+                              <tr>
+                                    <th scope="row" class="px-6 py-4 font-semibold text-gray-900
+                                    whitespace-nowrap
+                                    ">Semester</th>
+                                    <td class="px-6 py-4">{{ .Plan.Semester }}</td>
+                              </tr>
+                              <tr>
+                                    <th scope="row" class="px-6 py-4 font-semibold text-gray-900
+                                    whitespace-nowrap
+                                    ">Classroom</th>
+                                    <td class="px-6 py-4">{{ .Room.Name }}</td>
+                              </tr>
+                        </tbody>
+                  </table>
+            </div>
+      </div>
+    </div>
+  </body>
+</html>
+{{ end }}

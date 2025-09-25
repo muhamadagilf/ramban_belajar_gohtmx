@@ -73,13 +73,14 @@ func main() {
 	e.GET("/", handler.HomeHandler)
 
 	e.GET("/students", server.GetStudentsPage)
-	e.DELETE("/students/:id", server.DeleteStudent)
 
 	e.GET("/students/submission", server.GetStudentSubmitPage)
 	e.POST("/students/submission", server.CreateStudent, server.MiddlewareStudent)
 
-	e.GET("/student/:id", server.GetUpdateStudentPage)
-	e.PUT("/student/:id", server.UpdateStudent)
+	e.GET("/student/profile/:id", server.GetStudentProfile)
+	e.GET("/student/profile/:id/update", server.GetUpdateStudentPage)
+	e.PUT("/student/profile/:id/update", server.UpdateStudent)
+	e.DELETE("/student/profile/:id", server.DeleteStudent)
 
 	e.Logger.Fatal(e.Start(":" + portStr))
 
