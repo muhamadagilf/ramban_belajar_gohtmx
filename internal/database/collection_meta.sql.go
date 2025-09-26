@@ -10,25 +10,57 @@ import (
 	"time"
 )
 
-const getCollectionMeta = `-- name: GetCollectionMeta :one
+const generateStudentNim = `-- name: GenerateStudentNim :one
+UPDATE collection_meta
+SET value = (CAST(value as INTEGER)+1)::VARCHAR
+WHERE name = 'NIM'
+RETURNING id, created_at, updated_at, name, value
+`
+
+func (q *Queries) GenerateStudentNim(ctx context.Context) (CollectionMetum, error) {
+	row := q.db.QueryRowContext(ctx, generateStudentNim)
+	var i CollectionMetum
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Name,
+		&i.Value,
+	)
+	return i, err
+}
+
+const getCollectionMetaLastModified = `-- name: GetCollectionMetaLastModified :one
 SELECT updated_at FROM collection_meta
 WHERE name = $1
 `
 
-func (q *Queries) GetCollectionMeta(ctx context.Context, name string) (time.Time, error) {
-	row := q.db.QueryRowContext(ctx, getCollectionMeta, name)
+func (q *Queries) GetCollectionMetaLastModified(ctx context.Context, name string) (time.Time, error) {
+	row := q.db.QueryRowContext(ctx, getCollectionMetaLastModified, name)
 	var updated_at time.Time
 	err := row.Scan(&updated_at)
 	return updated_at, err
 }
 
-const updateCollectionMeta = `-- name: UpdateCollectionMeta :exec
+const getCollectionMetaValue = `-- name: GetCollectionMetaValue :one
+SELECT value FROM collection_meta
+WHERE name = $1
+`
+
+func (q *Queries) GetCollectionMetaValue(ctx context.Context, name string) (string, error) {
+	row := q.db.QueryRowContext(ctx, getCollectionMetaValue, name)
+	var value string
+	err := row.Scan(&value)
+	return value, err
+}
+
+const updateCollectionMetaLastModified = `-- name: UpdateCollectionMetaLastModified :exec
 UPDATE collection_meta
 SET updated_at = NOW()
 WHERE name = $1
 `
 
-func (q *Queries) UpdateCollectionMeta(ctx context.Context, name string) error {
-	_, err := q.db.ExecContext(ctx, updateCollectionMeta, name)
+func (q *Queries) UpdateCollectionMetaLastModified(ctx context.Context, name string) error {
+	_, err := q.db.ExecContext(ctx, updateCollectionMetaLastModified, name)
 	return err
 }

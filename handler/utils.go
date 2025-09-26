@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -53,21 +52,6 @@ func WithTX(ctx context.Context, db *sql.DB, q *database.Queries, fn dbFunc) err
 	}
 
 	return tx.Commit()
-}
-
-func generateNIM(qtx *database.Queries) (string, error) {
-	student, err := qtx.GetRecentCreatedStudent(context.Background())
-	if err != nil {
-		return "", err
-	}
-
-	currNim, err := strconv.Atoi(student.Nim)
-	if err != nil {
-		return "", err
-	}
-
-	currNim += 1
-	return strconv.Itoa(currNim), nil
 }
 
 func submissionErrorMsg(err string) string {

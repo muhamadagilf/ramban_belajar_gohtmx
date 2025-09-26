@@ -23,6 +23,7 @@ type CollectionMetum struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	Name      string
+	Value     string
 }
 
 type Room struct {

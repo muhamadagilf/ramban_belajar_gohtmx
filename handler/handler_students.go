@@ -37,7 +37,7 @@ func (srv *Server) CreateStudent(c echo.Context) error {
 			return fmt.Errorf("error: invalid NIP")
 		}
 
-		nim, err := generateNIM(qtx)
+		nim, err := qtx.GenerateStudentNim(ctx)
 		if err != nil {
 			return err
 		}
@@ -48,7 +48,7 @@ func (srv *Server) CreateStudent(c echo.Context) error {
 			ID:          uuid.New(),
 			CreatedAt:   time.Now().UTC(),
 			UpdatedAt:   time.Now().UTC(),
-			Nim:         nim,
+			Nim:         nim.Value,
 			Nip:         int32(nip),
 			Name:        name,
 			Email:       email,
@@ -74,7 +74,7 @@ func (srv *Server) CreateStudent(c echo.Context) error {
 		}
 
 		// update updated_at for Last-Modified Header (caching)
-		qtx.UpdateCollectionMeta(ctx, "students")
+		qtx.UpdateCollectionMetaLastModified(ctx, "students")
 
 		return nil
 	})
@@ -86,15 +86,8 @@ func (srv *Server) CreateStudent(c echo.Context) error {
 		})
 	}
 
-	createdStudent := c.Get("createdStudent").(*database.Student)
-	moreStudentInfo := c.Get("studentData").(*StudentData)
-
-	c.Render(http.StatusCreated, "student-submission", Data{})
-	return c.Render(http.StatusCreated, "submission-succeed", Data{
-		"Student":         createdStudent,
-		"MoreStudentInfo": moreStudentInfo,
-		"Message":         "Submission Complete",
-	})
+	c.Response().Header().Set("HX-Redirect", "/students")
+	return c.NoContent(http.StatusCreated)
 }
 
 func (srv *Server) GetStudentsPage(c echo.Context) error {
@@ -114,7 +107,7 @@ func (srv *Server) GetStudentsPage(c echo.Context) error {
 		plans = append(plans, plan)
 	}
 
-	lastModified, err := srv.Queries.GetCollectionMeta(c.Request().Context(), "students")
+	lastModified, err := srv.Queries.GetCollectionMetaLastModified(c.Request().Context(), "students")
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
 	}
@@ -151,7 +144,10 @@ func (srv *Server) DeleteStudent(c echo.Context) error {
 		}
 
 		// update updated_at for Last-Modified Header (caching)
-		qtx.UpdateCollectionMeta(ctx, "students")
+		err = qtx.UpdateCollectionMetaLastModified(ctx, "students")
+		if err != nil {
+			return err
+		}
 
 		return nil
 	})
@@ -164,7 +160,7 @@ func (srv *Server) DeleteStudent(c echo.Context) error {
 	}
 
 	c.Response().Header().Set("HX-Redirect", "/students")
-	return c.NoContent(http.StatusOK)
+	return c.Render(http.StatusSeeOther, "completion-message", Data{"Message": "Deletion Complete"})
 }
 
 func (srv *Server) GetStudentProfile(c echo.Context) error {
@@ -220,7 +216,7 @@ func (srv *Server) GetUpdateStudentPage(c echo.Context) error {
 }
 
 func (srv *Server) UpdateStudent(c echo.Context) error {
-	time.Sleep(500 * time.Millisecond)
+	time.Sleep(300 * time.Millisecond)
 	ctx := c.Request().Context()
 	err := WithTX(ctx, srv.DB, srv.Queries, func(qtx *database.Queries) error {
 
@@ -250,7 +246,7 @@ func (srv *Server) UpdateStudent(c echo.Context) error {
 		}
 
 		// update updated_at for Last-Modified Header (caching)
-		qtx.UpdateCollectionMeta(ctx, "students")
+		qtx.UpdateCollectionMetaLastModified(ctx, "students")
 
 		return nil
 	})
