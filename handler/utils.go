@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -85,4 +86,9 @@ func isLastModifiedValid(modifiedSince string, lastModified time.Time) bool {
 	t, err := time.Parse(http.TimeFormat, modifiedSince)
 
 	return err == nil && !lastModified.After(t)
+}
+
+func isEmailValid(e string) bool {
+	emailRegex := regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`)
+	return emailRegex.MatchString(e)
 }

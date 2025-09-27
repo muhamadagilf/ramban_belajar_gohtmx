@@ -31,6 +31,10 @@ func (srv *Server) CreateStudent(c echo.Context) error {
 			return fmt.Errorf("error: Required name, phone and email")
 		}
 
+		if !isEmailValid(email) {
+			return fmt.Errorf("error: please input proper email address")
+		}
+
 		nipStr := c.FormValue("nip")
 		nip, err := strconv.ParseInt(nipStr, 10, 64)
 		if err != nil {
@@ -216,22 +220,27 @@ func (srv *Server) GetUpdateStudentPage(c echo.Context) error {
 }
 
 func (srv *Server) UpdateStudent(c echo.Context) error {
+
 	time.Sleep(300 * time.Millisecond)
 	ctx := c.Request().Context()
-	err := WithTX(ctx, srv.DB, srv.Queries, func(qtx *database.Queries) error {
 
-		idStr := c.Param("id")
+	idStr := c.Param("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		return err
+	}
 
-		id, err := uuid.Parse(idStr)
-		if err != nil {
-			return err
-		}
+	err = WithTX(ctx, srv.DB, srv.Queries, func(qtx *database.Queries) error {
 
 		email := c.FormValue("email")
 		phone := c.FormValue("phone")
 
 		if email == " " || phone == " " {
 			return fmt.Errorf("error: Required email and phone")
+		}
+
+		if !isEmailValid(email) {
+			return fmt.Errorf("error: please input proper email address")
 		}
 
 		_, err = qtx.UpdateStudent(ctx, database.UpdateStudentParams{
@@ -258,6 +267,7 @@ func (srv *Server) UpdateStudent(c echo.Context) error {
 		})
 	}
 
-	c.Response().Header().Set("HX-Redirect", "/students")
+	redirectUrl := fmt.Sprintf("/student/profile/%v", idStr)
+	c.Response().Header().Set("HX-Redirect", redirectUrl)
 	return c.NoContent(http.StatusOK)
 }
