@@ -1,9 +1,9 @@
 
 -- +goose Up
 CREATE TABLE students (
-    id UUID PRIMARY KEY,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     nip INT UNIQUE NOT NULL,
     name VARCHAR(64) NOT NULL,
     email VARCHAR(64) UNIQUE NOT NULL,

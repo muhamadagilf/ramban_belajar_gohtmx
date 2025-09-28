@@ -21,6 +21,7 @@ func (srv *Server) GetStudentSubmitPage(c echo.Context) error {
 }
 
 func (srv *Server) CreateStudent(c echo.Context) error {
+	time.Sleep(300 * time.Millisecond)
 	ctx := c.Request().Context()
 	err := WithTX(ctx, srv.DB, srv.Queries, func(qtx *database.Queries) error {
 		name := c.FormValue("name")
@@ -49,9 +50,6 @@ func (srv *Server) CreateStudent(c echo.Context) error {
 		studentDat := c.Get("studentData").(*StudentData)
 
 		student, err := qtx.CreateStudent(ctx, database.CreateStudentParams{
-			ID:          uuid.New(),
-			CreatedAt:   time.Now().UTC(),
-			UpdatedAt:   time.Now().UTC(),
 			Nim:         nim.Value,
 			Nip:         int32(nip),
 			Name:        name,
@@ -78,7 +76,7 @@ func (srv *Server) CreateStudent(c echo.Context) error {
 		}
 
 		// update updated_at for Last-Modified Header (caching)
-		qtx.UpdateCollectionMetaLastModified(ctx, "students")
+		qtx.UpdateCollectionMetaLastModified(ctx, "student-coll")
 
 		return nil
 	})
@@ -111,7 +109,7 @@ func (srv *Server) GetStudentsPage(c echo.Context) error {
 		plans = append(plans, plan)
 	}
 
-	lastModified, err := srv.Queries.GetCollectionMetaLastModified(c.Request().Context(), "students")
+	lastModified, err := srv.Queries.GetCollectionMetaLastModified(c.Request().Context(), "student-coll")
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
 	}
@@ -148,7 +146,7 @@ func (srv *Server) DeleteStudent(c echo.Context) error {
 		}
 
 		// update updated_at for Last-Modified Header (caching)
-		err = qtx.UpdateCollectionMetaLastModified(ctx, "students")
+		err = qtx.UpdateCollectionMetaLastModified(ctx, "student-coll")
 		if err != nil {
 			return err
 		}
@@ -255,7 +253,7 @@ func (srv *Server) UpdateStudent(c echo.Context) error {
 		}
 
 		// update updated_at for Last-Modified Header (caching)
-		qtx.UpdateCollectionMetaLastModified(ctx, "students")
+		qtx.UpdateCollectionMetaLastModified(ctx, "student-coll")
 
 		return nil
 	})
