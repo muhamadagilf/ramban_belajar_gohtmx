@@ -3,6 +3,7 @@ package handler
 import (
 	"crypto/sha256"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -22,6 +23,8 @@ func (srv *Server) GetStudentSubmitPage(c echo.Context) error {
 
 func (srv *Server) CreateStudent(c echo.Context) error {
 	time.Sleep(300 * time.Millisecond)
+
+	var nim string
 	ctx := c.Request().Context()
 	err := WithTX(ctx, srv.DB, srv.Queries, func(qtx *database.Queries) error {
 		name := c.FormValue("name")
@@ -42,15 +45,27 @@ func (srv *Server) CreateStudent(c echo.Context) error {
 			return fmt.Errorf("error: invalid NIP")
 		}
 
-		nim, err := qtx.GenerateStudentNim(ctx)
+		// if free nim exists, get the smallest nim for the new created student
+		// and delete the record points to that free nim
+		nim, err = qtx.GetFreelistNim(ctx)
+
+		// checks if there is no free nim to be used
+		// simply generate from the student-nim
 		if err != nil {
-			return err
+			nim, _ = qtx.GetCollectionMetaValue(ctx, "student-nim")
+			qtx.IncrementStudentNim(ctx)
+			log.Println("\n\nStudent Creation Process..")
+		}
+
+		err = qtx.DeleteFreelistNim(ctx, nim)
+		if err != nil {
+			return fmt.Errorf("line 61")
 		}
 
 		studentDat := c.Get("studentData").(*StudentData)
 
 		student, err := qtx.CreateStudent(ctx, database.CreateStudentParams{
-			Nim:         nim.Value,
+			Nim:         nim,
 			Nip:         int32(nip),
 			Name:        name,
 			Email:       email,
@@ -140,10 +155,12 @@ func (srv *Server) DeleteStudent(c echo.Context) error {
 			return err
 		}
 
-		err = qtx.DeleteStudentById(ctx, id)
+		student, err := qtx.DeleteStudentById(ctx, id)
 		if err != nil {
 			return err
 		}
+
+		qtx.AddToFreelist(ctx, student.Nim)
 
 		// update updated_at for Last-Modified Header (caching)
 		err = qtx.UpdateCollectionMetaLastModified(ctx, "student-coll")

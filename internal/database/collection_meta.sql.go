@@ -10,24 +10,35 @@ import (
 	"time"
 )
 
-const generateStudentNim = `-- name: GenerateStudentNim :one
-UPDATE collection_meta
-SET value = (CAST(value as INTEGER)+1)::VARCHAR
-WHERE name = 'student-nim'
-RETURNING id, created_at, updated_at, name, value
+const addToFreelist = `-- name: AddToFreelist :exec
+INSERT INTO collection_meta (name, value)
+VALUES ('freelist-nim', $1)
 `
 
-func (q *Queries) GenerateStudentNim(ctx context.Context) (CollectionMetum, error) {
-	row := q.db.QueryRowContext(ctx, generateStudentNim)
-	var i CollectionMetum
-	err := row.Scan(
-		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.Name,
-		&i.Value,
-	)
-	return i, err
+func (q *Queries) AddToFreelist(ctx context.Context, value string) error {
+	_, err := q.db.ExecContext(ctx, addToFreelist, value)
+	return err
+}
+
+const decrementStudentNim = `-- name: DecrementStudentNim :exec
+UPDATE collection_meta
+SET value = (CAST(value as INTEGER)-1)::VARCHAR
+WHERE name = 'student-nim'
+`
+
+func (q *Queries) DecrementStudentNim(ctx context.Context) error {
+	_, err := q.db.ExecContext(ctx, decrementStudentNim)
+	return err
+}
+
+const deleteFreelistNim = `-- name: DeleteFreelistNim :exec
+DELETE FROM collection_meta
+WHERE name = 'freelist-nim' AND value = $1
+`
+
+func (q *Queries) DeleteFreelistNim(ctx context.Context, value string) error {
+	_, err := q.db.ExecContext(ctx, deleteFreelistNim, value)
+	return err
 }
 
 const getCollectionMetaLastModified = `-- name: GetCollectionMetaLastModified :one
@@ -52,6 +63,31 @@ func (q *Queries) GetCollectionMetaValue(ctx context.Context, name string) (stri
 	var value string
 	err := row.Scan(&value)
 	return value, err
+}
+
+const getFreelistNim = `-- name: GetFreelistNim :one
+SELECT value FROM collection_meta
+WHERE name = 'freelist-nim'
+ORDER BY value ASC
+LIMIT 1
+`
+
+func (q *Queries) GetFreelistNim(ctx context.Context) (string, error) {
+	row := q.db.QueryRowContext(ctx, getFreelistNim)
+	var value string
+	err := row.Scan(&value)
+	return value, err
+}
+
+const incrementStudentNim = `-- name: IncrementStudentNim :exec
+UPDATE collection_meta
+SET value = (CAST(value as INTEGER)+1)::VARCHAR
+WHERE name = 'student-nim'
+`
+
+func (q *Queries) IncrementStudentNim(ctx context.Context) error {
+	_, err := q.db.ExecContext(ctx, incrementStudentNim)
+	return err
 }
 
 const updateCollectionMetaLastModified = `-- name: UpdateCollectionMetaLastModified :exec

@@ -12,8 +12,26 @@ UPDATE collection_meta
 SET updated_at = NOW()
 WHERE name = $1;
 
--- name: GenerateStudentNim :one
+-- name: IncrementStudentNim :exec
 UPDATE collection_meta
 SET value = (CAST(value as INTEGER)+1)::VARCHAR
-WHERE name = 'student-nim'
-RETURNING *;
+WHERE name = 'student-nim';
+
+-- name: DecrementStudentNim :exec
+UPDATE collection_meta
+SET value = (CAST(value as INTEGER)-1)::VARCHAR
+WHERE name = 'student-nim';
+
+-- name: GetFreelistNim :one
+SELECT value FROM collection_meta
+WHERE name = 'freelist-nim'
+ORDER BY value ASC
+LIMIT 1;
+
+-- name: DeleteFreelistNim :exec
+DELETE FROM collection_meta
+WHERE name = 'freelist-nim' AND value = $1;
+
+-- name: AddToFreelist :exec
+INSERT INTO collection_meta (name, value)
+VALUES ('freelist-nim', $1);

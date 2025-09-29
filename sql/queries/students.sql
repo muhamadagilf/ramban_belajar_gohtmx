@@ -17,9 +17,10 @@ SELECT * FROM students
 ORDER BY created_at DESC
 LIMIT 1;
 
--- name: DeleteStudentById :exec
+-- name: DeleteStudentById :one
 DELETE FROM students
-WHERE id = $1;
+WHERE id = $1
+RETURNING *;
 
 -- name: UpdateStudent :one
 UPDATE students

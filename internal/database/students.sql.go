@@ -57,14 +57,29 @@ func (q *Queries) CreateStudent(ctx context.Context, arg CreateStudentParams) (S
 	return i, err
 }
 
-const deleteStudentById = `-- name: DeleteStudentById :exec
+const deleteStudentById = `-- name: DeleteStudentById :one
 DELETE FROM students
 WHERE id = $1
+RETURNING id, created_at, updated_at, nip, name, email, year, room_id, study_plan_id, phone_number, nim
 `
 
-func (q *Queries) DeleteStudentById(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.ExecContext(ctx, deleteStudentById, id)
-	return err
+func (q *Queries) DeleteStudentById(ctx context.Context, id uuid.UUID) (Student, error) {
+	row := q.db.QueryRowContext(ctx, deleteStudentById, id)
+	var i Student
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Nip,
+		&i.Name,
+		&i.Email,
+		&i.Year,
+		&i.RoomID,
+		&i.StudyPlanID,
+		&i.PhoneNumber,
+		&i.Nim,
+	)
+	return i, err
 }
 
 const getRecentCreatedStudent = `-- name: GetRecentCreatedStudent :one
