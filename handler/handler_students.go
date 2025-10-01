@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -15,11 +16,6 @@ import (
 
 type Data map[string]interface{}
 
-type StudentsQuery struct {
-	Room  string `query:"room" validate:"omitempty,oneof_room"`
-	Major string `query:"major" validate:"omitempty,oneof_major"`
-}
-
 func (srv *Server) GetStudentSubmitPage(c echo.Context) error {
 	return c.Render(http.StatusOK, "student-submission", Data{
 		"Major": MAJOR,
@@ -28,7 +24,6 @@ func (srv *Server) GetStudentSubmitPage(c echo.Context) error {
 
 func (srv *Server) CreateStudent(c echo.Context) error {
 	time.Sleep(300 * time.Millisecond)
-
 	var nim string
 	ctx := c.Request().Context()
 	err := WithTX(ctx, srv.DB, srv.Queries, func(qtx *database.Queries) error {
@@ -72,7 +67,7 @@ func (srv *Server) CreateStudent(c echo.Context) error {
 		student, err := qtx.CreateStudent(ctx, database.CreateStudentParams{
 			Nim:         nim,
 			Nip:         int32(nip),
-			Name:        name,
+			Name:        strings.ToLower(name),
 			Email:       email,
 			PhoneNumber: phone,
 			Year:        int32(YEAR),
@@ -113,42 +108,19 @@ func (srv *Server) CreateStudent(c echo.Context) error {
 }
 
 func (srv *Server) GetStudentsPage(c echo.Context) error {
-
 	ctx := c.Request().Context()
-	var studentsPageData Data
 
-	// retrieves all the necessary data
-	students, err := srv.Queries.GetStudentAll(ctx)
+	// retrieves all the necessary data, including query params handling
+	// do some filter & search querying
+	studentsPageData, err := studentsQueryParamHandler(c, srv.Queries)
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
 	}
 
-	// students filter by room and major, using query params
-	query := StudentsQuery{}
-	if err = c.Bind(&query); err != nil {
-		return c.String(http.StatusBadRequest, "invalid query parameters")
-	}
+	studentsPageData["Rooms"] = ROOM
+	studentsPageData["Majors"] = MAJOR
 
-	if err = c.Validate(&query); err != nil {
-		return c.String(http.StatusBadRequest, err.Error())
-	}
-
-	filterStudents, err := srv.Queries.GetStudentsByRoomAndMajor(ctx, database.GetStudentsByRoomAndMajorParams{
-		Name:  query.Room,
-		Major: query.Major,
-	})
-	if err != nil {
-		return c.String(http.StatusBadRequest, err.Error())
-	}
-
-	// checks if there is query params in the url
-	if c.Request().URL.RawQuery == "" {
-		studentsPageData = Data{"Students": students, "Rooms": ROOM, "Majors": MAJOR}
-	} else {
-		studentsPageData = Data{"Students": filterStudents, "Rooms": ROOM, "Majors": MAJOR}
-	}
-
-	// do, validation based caching
+	// do validation based caching
 	lastModified, err := srv.Queries.GetCollectionMetaLastModified(ctx, "student-coll")
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
@@ -209,6 +181,7 @@ func (srv *Server) DeleteStudent(c echo.Context) error {
 }
 
 func (srv *Server) GetStudentProfile(c echo.Context) error {
+	// retrieve all necessary data
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
@@ -230,6 +203,7 @@ func (srv *Server) GetStudentProfile(c echo.Context) error {
 		return c.String(http.StatusBadRequest, err.Error())
 	}
 
+	// validation based caching
 	lastModified := student.UpdatedAt
 	ETag := fmt.Sprintf("%x", sha256.Sum256([]byte(lastModified.Format(time.RFC3339))))
 
@@ -261,16 +235,13 @@ func (srv *Server) GetUpdateStudentPage(c echo.Context) error {
 }
 
 func (srv *Server) UpdateStudent(c echo.Context) error {
-
 	time.Sleep(300 * time.Millisecond)
 	ctx := c.Request().Context()
-
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
 		return err
 	}
-
 	err = WithTX(ctx, srv.DB, srv.Queries, func(qtx *database.Queries) error {
 
 		email := c.FormValue("email")

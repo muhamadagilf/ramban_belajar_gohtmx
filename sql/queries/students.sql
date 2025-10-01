@@ -23,6 +23,10 @@ SET email = $2, phone_number = $3, updated_at = $4
 WHERE id = $1
 RETURNING *;
 
+-- name: GetStudentByNameOrNim :many
+SELECT * FROM students
+WHERE name LIKE $1 AND nim LIKE $2;
+
 -- name: GetStudentsByRoomAndMajor :many
 SELECT s.id, s.created_at, s.updated_at, s.name, s.email, s.nim, 
 s.phone_number, r.name as room, std.major 

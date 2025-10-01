@@ -18,8 +18,17 @@
                               <i class="fa-solid fa-arrow-left"></i>
                               <span>Back</span>
                         </a>
-                  <h2 class="font-semibold">/students</h2>
-                  <div class="wrapper-students-content h-[100%] mt-[1rem] flex gap-[.8rem] justify-start">
+                  <h2 class="font-semibold mt-[1rem]">/students</h2>
+                  <form action="/students" method="get"
+                        class="search-form text-[.8rem] flex justify-between p-[.4rem]
+                        border border-gray-400 shadow-sm rounded-sm">
+                        <input type="text" class="search-inpt w-[50%] outline-none pl-[1rem]" id="search"
+                              name="search" placeholder="search student by name or nim">
+                        <button type="submit" class="border border-gray-400 rounded-sm shadow-md
+                        text-[.8rem] p-[.35rem] px-[1rem] font-semibold cursor-pointer bg-blue-600 text-white"
+                        >Search</button>
+                  </form>
+                  <div class="wrapper-students-content h-[100%] mt-[.8rem] flex gap-[.8rem] justify-start">
                         {{ template "students-content" . }}
                         <div class="filter-section w-[20%]">
                               <p class="font-semibold">Filter Students</p>
@@ -67,7 +76,7 @@
                   flex gap-[.8rem] w-[20%] h-fit p-[.5rem] text-[.8rem] font-semibold">
                         <i class="fa-solid fa-image-portrait text-[3.5rem]"></i>
                         <div class="snippet flex flex-col gap-[.3rem]">
-                              <p class="name text-wrap leading-none">{{ .Name }}</p>
+                              <p class="name text-wrap leading-none capitalize">{{ .Name }}</p>
                               <p class="nim">{{ .Nim }}</p>
                         </div>
             </a>

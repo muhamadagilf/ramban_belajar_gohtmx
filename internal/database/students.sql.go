@@ -146,6 +146,51 @@ func (q *Queries) GetStudentById(ctx context.Context, id uuid.UUID) (Student, er
 	return i, err
 }
 
+const getStudentByNameOrNim = `-- name: GetStudentByNameOrNim :many
+SELECT id, created_at, updated_at, nip, name, email, year, room_id, study_plan_id, phone_number, nim FROM students
+WHERE name LIKE $1 AND nim LIKE $2
+`
+
+type GetStudentByNameOrNimParams struct {
+	Name string
+	Nim  string
+}
+
+func (q *Queries) GetStudentByNameOrNim(ctx context.Context, arg GetStudentByNameOrNimParams) ([]Student, error) {
+	rows, err := q.db.QueryContext(ctx, getStudentByNameOrNim, arg.Name, arg.Nim)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Student
+	for rows.Next() {
+		var i Student
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Nip,
+			&i.Name,
+			&i.Email,
+			&i.Year,
+			&i.RoomID,
+			&i.StudyPlanID,
+			&i.PhoneNumber,
+			&i.Nim,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getStudentsByRoomAndMajor = `-- name: GetStudentsByRoomAndMajor :many
 SELECT s.id, s.created_at, s.updated_at, s.name, s.email, s.nim, 
 s.phone_number, r.name as room, std.major 

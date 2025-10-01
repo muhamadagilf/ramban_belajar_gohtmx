@@ -26,7 +26,7 @@ func (srv *Server) MiddlewareStudent(next echo.HandlerFunc) echo.HandlerFunc {
 		})
 
 		if err != nil {
-			return c.String(400, "error: cannot get the study_plan")
+			log.Println("errror: couldnt get the study plan")
 		}
 
 		switch major {
@@ -42,11 +42,11 @@ func (srv *Server) MiddlewareStudent(next echo.HandlerFunc) echo.HandlerFunc {
 
 		rooms, err := srv.Queries.GetStudentRoom(context.Background(), pattern)
 		if err != nil {
-			log.Println("45 babe")
+			log.Println(err.Error())
 		}
 
 		if len(rooms) == 0 {
-			log.Println("49 babe")
+			log.Println(err.Error())
 		}
 
 		c.Set("studentData", &StudentData{StudyPlan: studyPlan, Room: rooms[0]})
