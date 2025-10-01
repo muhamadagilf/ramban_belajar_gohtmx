@@ -15,6 +15,11 @@ import (
 
 type Data map[string]interface{}
 
+type StudentsQuery struct {
+	Room  string `query:"room" validate:"omitempty,oneof_room"`
+	Major string `query:"major" validate:"omitempty,oneof_major"`
+}
+
 func (srv *Server) GetStudentSubmitPage(c echo.Context) error {
 	return c.Render(http.StatusOK, "student-submission", Data{
 		"Major": MAJOR,
@@ -54,7 +59,7 @@ func (srv *Server) CreateStudent(c echo.Context) error {
 		if err != nil {
 			nim, _ = qtx.GetCollectionMetaValue(ctx, "student-nim")
 			qtx.IncrementStudentNim(ctx)
-			log.Println("\n\nStudent Creation Process..")
+			log.Println("\n\nstudent creation process...")
 		}
 
 		err = qtx.DeleteFreelistNim(ctx, nim)
@@ -108,23 +113,43 @@ func (srv *Server) CreateStudent(c echo.Context) error {
 }
 
 func (srv *Server) GetStudentsPage(c echo.Context) error {
-	students, err := srv.Queries.GetStudentAll(c.Request().Context())
+
+	ctx := c.Request().Context()
+	var studentsPageData Data
+
+	// retrieves all the necessary data
+	students, err := srv.Queries.GetStudentAll(ctx)
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
 	}
 
-	plans := []database.StudyPlan{}
-
-	for _, student := range students {
-		plan, err := srv.Queries.GetStudyPlanById(c.Request().Context(), student.StudyPlanID)
-		if err != nil {
-			return c.String(http.StatusBadRequest, err.Error())
-		}
-
-		plans = append(plans, plan)
+	// students filter by room and major, using query params
+	query := StudentsQuery{}
+	if err = c.Bind(&query); err != nil {
+		return c.String(http.StatusBadRequest, "invalid query parameters")
 	}
 
-	lastModified, err := srv.Queries.GetCollectionMetaLastModified(c.Request().Context(), "student-coll")
+	if err = c.Validate(&query); err != nil {
+		return c.String(http.StatusBadRequest, err.Error())
+	}
+
+	filterStudents, err := srv.Queries.GetStudentsByRoomAndMajor(ctx, database.GetStudentsByRoomAndMajorParams{
+		Name:  query.Room,
+		Major: query.Major,
+	})
+	if err != nil {
+		return c.String(http.StatusBadRequest, err.Error())
+	}
+
+	// checks if there is query params in the url
+	if c.Request().URL.RawQuery == "" {
+		studentsPageData = Data{"Students": students, "Rooms": ROOM, "Majors": MAJOR}
+	} else {
+		studentsPageData = Data{"Students": filterStudents, "Rooms": ROOM, "Majors": MAJOR}
+	}
+
+	// do, validation based caching
+	lastModified, err := srv.Queries.GetCollectionMetaLastModified(ctx, "student-coll")
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
 	}
@@ -140,7 +165,7 @@ func (srv *Server) GetStudentsPage(c echo.Context) error {
 	c.Response().Header().Set("Last-Modified", lastModified.UTC().Format(http.TimeFormat))
 	c.Response().Header().Set("Cache-Control", "no-cache")
 
-	return c.Render(http.StatusOK, "students", Data{"Students": students, "Plans": plans})
+	return c.Render(http.StatusOK, "students", studentsPageData)
 }
 
 func (srv *Server) DeleteStudent(c echo.Context) error {
@@ -160,6 +185,7 @@ func (srv *Server) DeleteStudent(c echo.Context) error {
 			return err
 		}
 
+		// simply, add the nim to freelist, if there is student deletion
 		qtx.AddToFreelist(ctx, student.Nim)
 
 		// update updated_at for Last-Modified Header (caching)

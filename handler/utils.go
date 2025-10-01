@@ -14,6 +14,7 @@ import (
 )
 
 var MAJOR = []string{"TEKNIK INFORMATIKA", "REKAYASA PERANGKAT LUNAK", "AKUNTANSI"}
+var ROOM = []string{"TIR1", "TIR2", "RPLR1", "RPLR2", "AKR1", "AKR2"}
 var YEAR = time.Now().Year()
 
 type dbFunc = func(q *database.Queries) error

@@ -10,7 +10,7 @@
             class="wrapper-content w-[90%] h-[80%] flex flex-col gap-y-[1.5rem]
             rounded shadow-lg bg-[#ffffff] py-[1.5rem] px-[2.5rem]"
       >
-            <a href="/student/profile/{{ .Student.ID }}"
+            <a href="/students/{{ .Student.ID }}/profile"
                   class="back-refresh flex gap-x-[.5rem] shadow-sm border border-gray-300
                   text-[.7rem] w-fit rounded cursor-pointer items-center px-[.8rem] py-[.3rem] font-semibold
                   hover:bg-[#0000003a] transition"
@@ -20,7 +20,7 @@
             </a>
             <div class="wrapper-form flex flex-col gap-y-[1rem] h-[100%]">
                   <h2 class="font-semibold">/student/update</h2>
-                  <form hx-PUT="/student/profile/{{ .Student.ID }}/update" hx-indicator="#loader-indicator"
+                  <form hx-PUT="/students/{{ .Student.ID }}/profile/update" hx-indicator="#loader-indicator"
                   class="update-student h-[inherit] flex flex-col gap-y-[.8rem]">
                         <div class="input-section flex gap-x-[1rem] [&>div]:h-fit">
                               <div class="email-section flex flex-col w-[50%] pt-[.3rem] pb-[.5rem] px-[.8rem]

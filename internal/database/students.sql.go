@@ -82,31 +82,6 @@ func (q *Queries) DeleteStudentById(ctx context.Context, id uuid.UUID) (Student,
 	return i, err
 }
 
-const getRecentCreatedStudent = `-- name: GetRecentCreatedStudent :one
-SELECT id, created_at, updated_at, nip, name, email, year, room_id, study_plan_id, phone_number, nim FROM students
-ORDER BY created_at DESC
-LIMIT 1
-`
-
-func (q *Queries) GetRecentCreatedStudent(ctx context.Context) (Student, error) {
-	row := q.db.QueryRowContext(ctx, getRecentCreatedStudent)
-	var i Student
-	err := row.Scan(
-		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.Nip,
-		&i.Name,
-		&i.Email,
-		&i.Year,
-		&i.RoomID,
-		&i.StudyPlanID,
-		&i.PhoneNumber,
-		&i.Nim,
-	)
-	return i, err
-}
-
 const getStudentAll = `-- name: GetStudentAll :many
 SELECT id, created_at, updated_at, nip, name, email, year, room_id, study_plan_id, phone_number, nim FROM students
 ORDER BY updated_at DESC
@@ -169,6 +144,67 @@ func (q *Queries) GetStudentById(ctx context.Context, id uuid.UUID) (Student, er
 		&i.Nim,
 	)
 	return i, err
+}
+
+const getStudentsByRoomAndMajor = `-- name: GetStudentsByRoomAndMajor :many
+SELECT s.id, s.created_at, s.updated_at, s.name, s.email, s.nim, 
+s.phone_number, r.name as room, std.major 
+FROM students as s
+JOIN rooms as r
+        ON s.room_id = r.id
+JOIN study_plans as std
+	ON s.study_plan_id = std.id
+WHERE std.major = $1 OR r.name = $2
+`
+
+type GetStudentsByRoomAndMajorParams struct {
+	Major string
+	Name  string
+}
+
+type GetStudentsByRoomAndMajorRow struct {
+	ID          uuid.UUID
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	Name        string
+	Email       string
+	Nim         string
+	PhoneNumber string
+	Room        string
+	Major       string
+}
+
+func (q *Queries) GetStudentsByRoomAndMajor(ctx context.Context, arg GetStudentsByRoomAndMajorParams) ([]GetStudentsByRoomAndMajorRow, error) {
+	rows, err := q.db.QueryContext(ctx, getStudentsByRoomAndMajor, arg.Major, arg.Name)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetStudentsByRoomAndMajorRow
+	for rows.Next() {
+		var i GetStudentsByRoomAndMajorRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Name,
+			&i.Email,
+			&i.Nim,
+			&i.PhoneNumber,
+			&i.Room,
+			&i.Major,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const updateStudent = `-- name: UpdateStudent :one

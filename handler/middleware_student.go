@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"log"
 
 	"github.com/labstack/echo/v4"
 	"github.com/muhamadagilf/rambanbelajar_gohtmx/internal/database"
@@ -41,11 +42,11 @@ func (srv *Server) MiddlewareStudent(next echo.HandlerFunc) echo.HandlerFunc {
 
 		rooms, err := srv.Queries.GetStudentRoom(context.Background(), pattern)
 		if err != nil {
-			return c.String(400, "error: cannot get the student room")
+			log.Println("45 babe")
 		}
 
 		if len(rooms) == 0 {
-			return c.String(400, "error: cannot found the room for this major")
+			log.Println("49 babe")
 		}
 
 		c.Set("studentData", &StudentData{StudyPlan: studyPlan, Room: rooms[0]})

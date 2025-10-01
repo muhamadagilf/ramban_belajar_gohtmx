@@ -3,39 +3,73 @@
 <html>
   {{ template "head" . }}
   <title>Students</title>
-  <body class="flex justify-center items-center h-screen bg-[whitesmoke]">
-    {{ template "loader" . }}
-    <div
-            id="wrapper-content"
-            class="wrapper-content w-[90%] h-[80%] flex flex-col gap-y-[1rem]
-            rounded shadow-lg bg-[#ffffff] py-[1.5rem] px-[2.5rem]"
-      >
-      <a href="/"
-                  class="back-refresh flex gap-x-[.5rem] shadow-sm border border-gray-300
-                  text-[.7rem] w-fit rounded cursor-pointer items-center px-[.8rem] py-[.3rem] font-semibold
-                  hover:bg-[#0000003a] transition"
-      >
-                  <i class="fa-solid fa-arrow-left"></i>
-                  <span>Back</span>
-            </a>
-      <h2 class="font-semibold">/students</h2>
-      {{ template "students-content" . }}
-    </div>
-  </body>
+      <body class="flex justify-center items-center h-screen bg-[whitesmoke]">
+      {{ template "loader" . }}
+            <div
+                  id="wrapper-content"
+                  class="wrapper-content w-[90%] h-[80%] flex flex-col gap-y-[1rem]
+                  rounded shadow-lg bg-[#ffffff] py-[1.5rem] px-[2.5rem]"
+            >
+                   <a href="/"
+                              class="back-refresh flex gap-x-[.5rem] shadow-sm border border-gray-300
+                              text-[.7rem] w-fit rounded cursor-pointer items-center px-[.8rem] py-[.3rem] font-semibold
+                              hover:bg-[#0000003a] transition"
+                  >
+                              <i class="fa-solid fa-arrow-left"></i>
+                              <span>Back</span>
+                        </a>
+                  <h2 class="font-semibold">/students</h2>
+                  <div class="wrapper-students-content h-[100%] mt-[1rem] flex gap-[.8rem] justify-start">
+                        {{ template "students-content" . }}
+                        <div class="filter-section w-[20%]">
+                              <p class="font-semibold">Filter Students</p>
+                              <form action="/students" method="get" class="flex flex-col gap-[1rem] mt-[1rem]">
+                                    <div class="wrapper-inpts flex flex-col gap-[.8rem]
+                                    [&_select]:w-[100%] [&_select]:outline-none [&_select]:curosr-pointer [&>div]:cursor-pointer">
+                                          <div class="room-section p-[.7rem] border border-gray-400 shadow-md rounded-md">
+                                                <select name="room" id="room-select">
+                                                      <option value="" selected>--Choose Room--</option>
+                                                      {{ range .Rooms }}
+                                                      <option value="{{ . }}">{{ . }}</option>
+                                                      {{ end  }}
+                                                </select>
+                                          </div>
+                                          <div class="major-section p-[.7rem] border border-gray-400 shadow-md rounded-md">
+                                                <select name="major" id="major-select">
+                                                      <option value="" selected>--Choose Major--</option>
+                                                      {{ range .Majors }}
+                                                      <option value="{{ . }}">{{ . }}</option>
+                                                      {{ end }}
+                                                </select>
+                                          </div>
+                                    </div>
+                                    <div class="btns flex flex-col gap-[.8rem]">
+                                          <button type="submit" class="w-[100%] border border-gray-400
+                                          rounded-md shadow-md text-[.8rem] p-[.4rem] font-semibold
+                                          cursor-pointer bg-blue-600 text-white">Filter</button>
+                                          <a href="/students" class="w-[100%] border border-gray-400
+                                          rounded-md shadow-md text-[.8rem] p-[.4rem] font-semibold
+                                          cursor-pointer text-center">Back</a>
+                                    </div>
+                              </form>
+                        </div>
+                  </div>
+            </div>
+      </body>
 </html>
 {{ end }}
 
 {{ block "students-content" . }}
-<div id="students" class="flex gap-[.8rem] h-[100%] mt-[1rem]">
+<div id="students" class="flex flex-wrap content-start gap-[.8rem] w-[80%] h-[100%]">
       {{ range .Students }}
-            <a href="/student/profile/{{ .ID }}"
-            class="border border-gray-400 shadow-md rounded-md items-center
-                  flex gap-[.8rem] w-[15%] h-fit p-[.5rem] text-[.8rem] font-semibold">
-                  <i class="fa-solid fa-image-portrait text-[3.5rem]"></i>
-                  <div class="snippet flex flex-col gap-[.3rem]">
-                        <p class="name text-wrap leading-none">{{ .Name }}</p>
-                        <p class="nim">{{ .Nim }}</p>
-                  </div>
+            <a    href="/students/{{ .ID }}/profile"
+                  class="border border-gray-400 shadow-md rounded-md items-center
+                  flex gap-[.8rem] w-[20%] h-fit p-[.5rem] text-[.8rem] font-semibold">
+                        <i class="fa-solid fa-image-portrait text-[3.5rem]"></i>
+                        <div class="snippet flex flex-col gap-[.3rem]">
+                              <p class="name text-wrap leading-none">{{ .Name }}</p>
+                              <p class="nim">{{ .Nim }}</p>
+                        </div>
             </a>
       {{ end }}
 </div>

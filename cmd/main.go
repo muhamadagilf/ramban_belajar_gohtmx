@@ -6,7 +6,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"slices"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -28,6 +30,18 @@ func newTemplate() *Templates {
 	}
 }
 
+// Custom Validator
+type CustomValidator struct {
+	validator *validator.Validate
+}
+
+func (cv *CustomValidator) Validate(i interface{}) error {
+	if err := cv.validator.Struct(i); err != nil {
+		return err
+	}
+	return nil
+}
+
 func main() {
 
 	godotenv.Load(".env")
@@ -42,8 +56,25 @@ func main() {
 		log.Fatal(err)
 	}
 
+	defer server.DB.Close()
+
 	e := echo.New()
 	e.Use(middleware.Logger())
+
+	// set custom validator to global scope
+	// create custom oneof for validate tag
+	v := validator.New()
+	v.RegisterValidation("oneof_major", func(fl validator.FieldLevel) bool {
+		majorStr := fl.Field().String()
+		return slices.Contains(handler.MAJOR, majorStr)
+	})
+
+	v.RegisterValidation("oneof_room", func(fl validator.FieldLevel) bool {
+		roomStr := fl.Field().String()
+		return slices.Contains(handler.ROOM, roomStr)
+	})
+
+	e.Validator = &CustomValidator{validator: v}
 
 	// essentially for this project, the CORS Config wouldnt be triggered.
 	// because there is no Cross-Origin Resource Sharing.
@@ -77,10 +108,10 @@ func main() {
 	e.GET("/students/submission", server.GetStudentSubmitPage)
 	e.POST("/students/submission", server.CreateStudent, server.MiddlewareStudent)
 
-	e.GET("/student/profile/:id", server.GetStudentProfile)
-	e.GET("/student/profile/:id/update", server.GetUpdateStudentPage)
-	e.PUT("/student/profile/:id/update", server.UpdateStudent)
-	e.DELETE("/student/profile/:id", server.DeleteStudent)
+	e.GET("/students/:id/profile", server.GetStudentProfile)
+	e.DELETE("/students/:id/profile", server.DeleteStudent)
+	e.GET("/students/:id/profile/update", server.GetUpdateStudentPage)
+	e.PUT("/students/:id/profile/update", server.UpdateStudent)
 
 	e.Logger.Fatal(e.Start(":" + portStr))
 

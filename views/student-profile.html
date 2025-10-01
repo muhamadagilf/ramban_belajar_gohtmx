@@ -31,13 +31,13 @@
                   <div class="bottom-part border border-gray-400 shadow-md rounded-md
                         flex justify-center items-center gap-x-[2rem]">
                         <a
-                              hx-DELETE="/student/profile/{{ .Student.ID }}"
+                              hx-DELETE="/students/{{ .Student.ID }}/profile"
                               hx-indicator="#loader-indicator"
                               class="cursor-pointer color-[red]">
                               <i class="fa-solid fa-trash-can color-[red] transition"></i>
                         </a>
                         <a
-                              href="/student/profile/{{ .Student.ID }}/update">
+                              href="/students/{{ .Student.ID }}/profile/update">
                               <i class="fa-solid fa-user-pen"></i>
                         </a>
                   </div>
