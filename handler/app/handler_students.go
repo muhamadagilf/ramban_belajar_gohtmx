@@ -1,35 +1,42 @@
-package handler
+package app
 
 import (
 	"crypto/sha256"
 	"fmt"
 	"log"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	"github.com/muhamadagilf/rambanbelajar_gohtmx/handler"
 	"github.com/muhamadagilf/rambanbelajar_gohtmx/internal/database"
 )
 
 type Data map[string]interface{}
 
-func (srv *Server) GetStudentSubmitPage(c echo.Context) error {
+func (config *appConfig) GetStudentSubmitPage(c echo.Context) error {
 	return c.Render(http.StatusOK, "student-submission", Data{
 		"Major": MAJOR,
 	})
 }
 
-func (srv *Server) CreateStudent(c echo.Context) error {
+func (config *appConfig) CreateStudent(c echo.Context) error {
 	time.Sleep(300 * time.Millisecond)
 	var nim string
 	ctx := c.Request().Context()
-	err := WithTX(ctx, srv.DB, srv.Queries, func(qtx *database.Queries) error {
+
+	err := handler.WithTX(ctx, config.Server.DB, config.Server.Queries, func(qtx *database.Queries) error {
 		name := c.FormValue("name")
 		email := c.FormValue("email")
 		phone := c.FormValue("phone")
+
+		if !regexp.MustCompile(`^[a-zA-Z\s]+$`).MatchString(name) {
+			return fmt.Errorf("error: please input valid name")
+		}
 
 		if name == " " || phone == " " {
 			return fmt.Errorf("error: Required name, phone and email")
@@ -107,12 +114,12 @@ func (srv *Server) CreateStudent(c echo.Context) error {
 	return c.NoContent(http.StatusCreated)
 }
 
-func (srv *Server) GetStudentsPage(c echo.Context) error {
+func (config *appConfig) GetStudentsPage(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	// retrieves all the necessary data, including query params handling
 	// do some filter & search querying
-	studentsPageData, err := studentsQueryParamHandler(c, srv.Queries)
+	studentsPageData, err := studentsQueryParamHandler(c, config.Server.Queries)
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
 	}
@@ -121,7 +128,7 @@ func (srv *Server) GetStudentsPage(c echo.Context) error {
 	studentsPageData["Majors"] = MAJOR
 
 	// do validation based caching
-	lastModified, err := srv.Queries.GetCollectionMetaLastModified(ctx, "student-coll")
+	lastModified, err := config.Server.Queries.GetCollectionMetaLastModified(ctx, "student-coll")
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
 	}
@@ -129,7 +136,7 @@ func (srv *Server) GetStudentsPage(c echo.Context) error {
 	ETag := fmt.Sprintf("%x", sha256.Sum256([]byte(lastModified.Format(time.RFC3339))))
 
 	modifiedSince := c.Request().Header.Get("If-Modified-Since")
-	if c.Request().Header.Get("If-None-Match") == ETag || isLastModifiedValid(modifiedSince, lastModified) {
+	if c.Request().Header.Get("If-None-Match") == ETag || handler.IsLastModifiedValid(modifiedSince, lastModified) {
 		return c.NoContent(http.StatusNotModified)
 	}
 
@@ -140,10 +147,10 @@ func (srv *Server) GetStudentsPage(c echo.Context) error {
 	return c.Render(http.StatusOK, "students", studentsPageData)
 }
 
-func (srv *Server) DeleteStudent(c echo.Context) error {
+func (config *appConfig) DeleteStudent(c echo.Context) error {
 	time.Sleep(300 * time.Millisecond)
 	ctx := c.Request().Context()
-	err := WithTX(ctx, srv.DB, srv.Queries, func(qtx *database.Queries) error {
+	err := handler.WithTX(ctx, config.Server.DB, config.Server.Queries, func(qtx *database.Queries) error {
 
 		idStr := c.Param("id")
 
@@ -180,7 +187,7 @@ func (srv *Server) DeleteStudent(c echo.Context) error {
 	return c.Render(http.StatusSeeOther, "completion-message", Data{"Message": "Deletion Complete"})
 }
 
-func (srv *Server) GetStudentProfile(c echo.Context) error {
+func (config *appConfig) GetStudentProfile(c echo.Context) error {
 	// retrieve all necessary data
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
@@ -188,17 +195,17 @@ func (srv *Server) GetStudentProfile(c echo.Context) error {
 		return c.String(http.StatusBadRequest, err.Error())
 	}
 
-	student, err := srv.Queries.GetStudentById(c.Request().Context(), id)
+	student, err := config.Server.Queries.GetStudentById(c.Request().Context(), id)
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
 	}
 
-	plan, err := srv.Queries.GetStudyPlanById(c.Request().Context(), student.StudyPlanID)
+	plan, err := config.Server.Queries.GetStudyPlanById(c.Request().Context(), student.StudyPlanID)
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
 	}
 
-	room, err := srv.Queries.GetStudentRoomById(c.Request().Context(), student.RoomID)
+	room, err := config.Server.Queries.GetStudentRoomById(c.Request().Context(), student.RoomID)
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
 	}
@@ -208,7 +215,7 @@ func (srv *Server) GetStudentProfile(c echo.Context) error {
 	ETag := fmt.Sprintf("%x", sha256.Sum256([]byte(lastModified.Format(time.RFC3339))))
 
 	modifiedSince := c.Request().Header.Get("If-Modified-Since")
-	if c.Request().Header.Get("If-None-Match") == ETag || isLastModifiedValid(modifiedSince, lastModified) {
+	if c.Request().Header.Get("If-None-Match") == ETag || handler.IsLastModifiedValid(modifiedSince, lastModified) {
 		return c.NoContent(http.StatusNotModified)
 	}
 
@@ -219,14 +226,14 @@ func (srv *Server) GetStudentProfile(c echo.Context) error {
 	return c.Render(http.StatusOK, "student-profile", Data{"Student": student, "Plan": plan, "Room": room})
 }
 
-func (srv *Server) GetUpdateStudentPage(c echo.Context) error {
+func (config *appConfig) GetUpdateStudentPage(c echo.Context) error {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
 	}
 
-	student, err := srv.Queries.GetStudentById(c.Request().Context(), id)
+	student, err := config.Server.Queries.GetStudentById(c.Request().Context(), id)
 	if err != nil {
 		return c.String(400, err.Error())
 	}
@@ -234,7 +241,7 @@ func (srv *Server) GetUpdateStudentPage(c echo.Context) error {
 	return c.Render(http.StatusOK, "update-student", Data{"Student": student})
 }
 
-func (srv *Server) UpdateStudent(c echo.Context) error {
+func (config *appConfig) UpdateStudent(c echo.Context) error {
 	time.Sleep(300 * time.Millisecond)
 	ctx := c.Request().Context()
 	idStr := c.Param("id")
@@ -242,7 +249,7 @@ func (srv *Server) UpdateStudent(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	err = WithTX(ctx, srv.DB, srv.Queries, func(qtx *database.Queries) error {
+	err = handler.WithTX(ctx, config.Server.DB, config.Server.Queries, func(qtx *database.Queries) error {
 
 		email := c.FormValue("email")
 		phone := c.FormValue("phone")

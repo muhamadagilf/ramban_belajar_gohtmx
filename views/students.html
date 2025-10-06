@@ -19,48 +19,52 @@
                               <span>Back</span>
                         </a>
                   <h2 class="font-semibold mt-[1rem]">/students</h2>
-                  <form action="/students" method="get"
-                        class="search-form text-[.8rem] flex justify-between p-[.4rem]
-                        border border-gray-400 shadow-sm rounded-sm">
-                        <input type="text" class="search-inpt w-[50%] outline-none pl-[1rem]" id="search"
-                              name="search" placeholder="search student by name or nim">
-                        <button type="submit" class="border border-gray-400 rounded-sm shadow-md
-                        text-[.8rem] p-[.35rem] px-[1rem] font-semibold cursor-pointer bg-blue-600 text-white"
-                        >Search</button>
-                  </form>
-                  <div class="wrapper-students-content h-[100%] mt-[.8rem] flex gap-[.8rem] justify-start">
-                        {{ template "students-content" . }}
-                        <div class="filter-section w-[20%]">
-                              <p class="font-semibold">Filter Students</p>
-                              <form action="/students" method="get" class="flex flex-col gap-[1rem] mt-[1rem]">
-                                    <div class="wrapper-inpts flex flex-col gap-[.8rem]
-                                    [&_select]:w-[100%] [&_select]:outline-none [&_select]:curosr-pointer [&>div]:cursor-pointer">
-                                          <div class="room-section p-[.7rem] border border-gray-400 shadow-md rounded-md">
-                                                <select name="room" id="room-select">
-                                                      <option value="" selected>--Choose Room--</option>
-                                                      {{ range .Rooms }}
-                                                      <option value="{{ . }}">{{ . }}</option>
-                                                      {{ end  }}
-                                                </select>
-                                          </div>
-                                          <div class="major-section p-[.7rem] border border-gray-400 shadow-md rounded-md">
-                                                <select name="major" id="major-select">
-                                                      <option value="" selected>--Choose Major--</option>
-                                                      {{ range .Majors }}
-                                                      <option value="{{ . }}">{{ . }}</option>
-                                                      {{ end }}
-                                                </select>
-                                          </div>
-                                    </div>
-                                    <div class="btns flex flex-col gap-[.8rem]">
-                                          <button type="submit" class="w-[100%] border border-gray-400
-                                          rounded-md shadow-md text-[.8rem] p-[.4rem] font-semibold
-                                          cursor-pointer bg-blue-600 text-white">Filter</button>
-                                          <a href="/students" class="w-[100%] border border-gray-400
-                                          rounded-md shadow-md text-[.8rem] p-[.4rem] font-semibold
-                                          cursor-pointer text-center">Back</a>
-                                    </div>
+                  <div class="wrapper-students-content h-[100%] mt-[.8rem] flex justify-between">
+                        <div class="right-section flex flex-col w-[75%] gap-[1.2rem]">
+                              <form action="/students" method="get"
+                              class="search-form text-[.8rem] flex justify-between p-[.4rem]
+                              border border-gray-400 shadow-sm rounded-sm">
+                                    <input type="text" class="search-inpt w-[100%] outline-none pl-[1rem]" id="search"
+                                          name="search" placeholder="search student by name or nim">
+                                    <button type="submit" class="border border-gray-400 rounded-sm shadow-md
+                                    text-[.8rem] p-[.35rem] px-[1rem] font-semibold cursor-pointer bg-blue-600 text-white"
+                                    >Search</button>
                               </form>
+                              {{ template "students-content" . }}
+                        </div>
+                        <div class="right-section w-[20%]">
+                              <div class="filter-section ">
+                                    <p class="font-semibold">Filter Students</p>
+                                    <form action="/students" method="get" class="flex flex-col gap-[1rem] mt-[1rem]">
+                                          <div class="wrapper-inpts flex flex-col gap-[.8rem]
+                                          [&_select]:w-[100%] [&_select]:outline-none [&_select]:cursor-pointer [&>div]:cursor-pointer">
+                                                <div class="room-section p-[.7rem] border border-gray-400 shadow-md rounded-md">
+                                                      <select name="room" id="room-select">
+                                                            <option value="" selected>--Choose Room--</option>
+                                                            {{ range .Rooms }}
+                                                            <option value="{{ . }}">{{ . }}</option>
+                                                            {{ end  }}
+                                                      </select>
+                                                </div>
+                                                <div class="major-section p-[.7rem] border border-gray-400 shadow-md rounded-md">
+                                                      <select name="major" id="major-select">
+                                                            <option value="" selected>--Choose Major--</option>
+                                                            {{ range .Majors }}
+                                                            <option value="{{ . }}">{{ . }}</option>
+                                                            {{ end }}
+                                                      </select>
+                                                </div>
+                                          </div>
+                                          <div class="btns flex flex-col gap-[.8rem]">
+                                                <button type="submit" class="w-[100%] border border-gray-400
+                                                rounded-md shadow-md text-[.8rem] p-[.4rem] font-semibold
+                                                cursor-pointer bg-blue-600 text-white">Filter</button>
+                                                <a href="/students" class="w-[100%] border border-gray-400
+                                                rounded-md shadow-md text-[.8rem] p-[.4rem] font-semibold
+                                                cursor-pointer text-center">Back</a>
+                                          </div>
+                                    </form>
+                              </div>
                         </div>
                   </div>
             </div>
@@ -69,11 +73,11 @@
 {{ end }}
 
 {{ block "students-content" . }}
-<div id="students" class="flex flex-wrap content-start gap-[.8rem] w-[80%] h-[100%]">
+<div id="students" class="flex flex-wrap content-start gap-[1rem] w-[100%] h-[100%]">
       {{ range .Students }}
             <a    href="/students/{{ .ID }}/profile"
                   class="border border-gray-400 shadow-md rounded-md items-center
-                  flex gap-[.8rem] w-[20%] h-fit p-[.5rem] text-[.8rem] font-semibold">
+                  flex gap-[.8rem] w-[23.5%] h-fit p-[.5rem] text-[.8rem] font-semibold">
                         <i class="fa-solid fa-image-portrait text-[3.5rem]"></i>
                         <div class="snippet flex flex-col gap-[.3rem]">
                               <p class="name text-wrap leading-none capitalize">{{ .Name }}</p>

@@ -1,4 +1,4 @@
-package handler
+package app
 
 import (
 	"context"
@@ -13,14 +13,14 @@ type StudentData struct {
 	Room      database.Room
 }
 
-func (srv *Server) MiddlewareStudent(next echo.HandlerFunc) echo.HandlerFunc {
+func (config *appConfig) MiddlewareStudent(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 
 		var roomPrefix string
 
 		major := c.FormValue("major")
 
-		studyPlan, err := srv.Queries.GetStudyPlan(context.Background(), database.GetStudyPlanParams{
+		studyPlan, err := config.Server.Queries.GetStudyPlan(context.Background(), database.GetStudyPlanParams{
 			Semester: int32(1),
 			Major:    major,
 		})
@@ -40,7 +40,7 @@ func (srv *Server) MiddlewareStudent(next echo.HandlerFunc) echo.HandlerFunc {
 
 		pattern := "%" + roomPrefix + "%"
 
-		rooms, err := srv.Queries.GetStudentRoom(context.Background(), pattern)
+		rooms, err := config.Server.Queries.GetStudentRoom(context.Background(), pattern)
 		if err != nil {
 			log.Println(err.Error())
 		}

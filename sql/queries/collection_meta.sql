@@ -17,11 +17,6 @@ UPDATE collection_meta
 SET value = (CAST(value as INTEGER)+1)::VARCHAR
 WHERE name = 'student-nim';
 
--- name: DecrementStudentNim :exec
-UPDATE collection_meta
-SET value = (CAST(value as INTEGER)-1)::VARCHAR
-WHERE name = 'student-nim';
-
 -- name: GetFreelistNim :one
 SELECT value FROM collection_meta
 WHERE name = 'freelist-nim'
