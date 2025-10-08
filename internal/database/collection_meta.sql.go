@@ -20,14 +20,14 @@ func (q *Queries) AddToFreelist(ctx context.Context, value string) error {
 	return err
 }
 
-const decrementStudentNim = `-- name: DecrementStudentNim :exec
+const decrementValueByName = `-- name: DecrementValueByName :exec
 UPDATE collection_meta
 SET value = (CAST(value as INTEGER)-1)::VARCHAR
-WHERE name = 'student-nim'
+WHERE name = $1
 `
 
-func (q *Queries) DecrementStudentNim(ctx context.Context) error {
-	_, err := q.db.ExecContext(ctx, decrementStudentNim)
+func (q *Queries) DecrementValueByName(ctx context.Context, name string) error {
+	_, err := q.db.ExecContext(ctx, decrementValueByName, name)
 	return err
 }
 
@@ -79,14 +79,14 @@ func (q *Queries) GetFreelistNim(ctx context.Context) (string, error) {
 	return value, err
 }
 
-const incrementStudentNim = `-- name: IncrementStudentNim :exec
+const incrementValueByname = `-- name: IncrementValueByname :exec
 UPDATE collection_meta
 SET value = (CAST(value as INTEGER)+1)::VARCHAR
-WHERE name = 'student-nim'
+WHERE name = $1
 `
 
-func (q *Queries) IncrementStudentNim(ctx context.Context) error {
-	_, err := q.db.ExecContext(ctx, incrementStudentNim)
+func (q *Queries) IncrementValueByname(ctx context.Context, name string) error {
+	_, err := q.db.ExecContext(ctx, incrementValueByname, name)
 	return err
 }
 

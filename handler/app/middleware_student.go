@@ -1,8 +1,9 @@
-package app
+package web
 
 import (
-	"context"
-	"log"
+	"fmt"
+	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 	"github.com/muhamadagilf/rambanbelajar_gohtmx/internal/database"
@@ -13,20 +14,21 @@ type StudentData struct {
 	Room      database.Room
 }
 
-func (config *appConfig) MiddlewareStudent(next echo.HandlerFunc) echo.HandlerFunc {
+func (config *webConfig) MiddlewareStudent(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-
 		var roomPrefix string
+		ctx := c.Request().Context()
+		qtx := config.Server.Queries
 
 		major := c.FormValue("major")
 
-		studyPlan, err := config.Server.Queries.GetStudyPlan(context.Background(), database.GetStudyPlanParams{
+		studyPlan, err := qtx.GetStudyPlan(ctx, database.GetStudyPlanParams{
 			Semester: int32(1),
 			Major:    major,
 		})
 
 		if err != nil {
-			log.Println("errror: couldnt get the study plan")
+			c.String(http.StatusBadRequest, err.Error())
 		}
 
 		switch major {
@@ -39,17 +41,37 @@ func (config *appConfig) MiddlewareStudent(next echo.HandlerFunc) echo.HandlerFu
 		}
 
 		pattern := "%" + roomPrefix + "%"
+		var room database.Room
 
-		rooms, err := config.Server.Queries.GetStudentRoom(context.Background(), pattern)
+		rooms, err := qtx.GetStudentRoom(ctx, pattern)
 		if err != nil {
-			log.Println(err.Error())
+			c.String(http.StatusBadRequest, err.Error())
 		}
 
 		if len(rooms) == 0 {
-			log.Println(err.Error())
+			c.String(http.StatusBadRequest, err.Error())
 		}
 
-		c.Set("studentData", &StudentData{StudyPlan: studyPlan, Room: rooms[0]})
+		studentClassCount := major + "-StudentCount"
+		studentCount, err := qtx.GetCollectionMetaValue(ctx, studentClassCount)
+		if err != nil {
+			return c.String(http.StatusBadRequest, err.Error())
+		}
+
+		n, _ := strconv.Atoi(studentCount)
+		if n > 10 {
+			return c.String(
+				http.StatusBadRequest,
+				fmt.Sprintf("Class from %v is all full", major),
+			)
+		}
+		if n < 5 {
+			room = rooms[0]
+		}
+		if n >= 5 && n < 11 {
+			room = rooms[1]
+		}
+		c.Set("studentData", &StudentData{StudyPlan: studyPlan, Room: room})
 
 		return next(c)
 

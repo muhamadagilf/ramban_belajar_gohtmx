@@ -10,7 +10,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
-	"github.com/muhamadagilf/rambanbelajar_gohtmx/handler/app"
+	web "github.com/muhamadagilf/rambanbelajar_gohtmx/handler/app"
 	"github.com/muhamadagilf/rambanbelajar_gohtmx/utils"
 )
 
@@ -38,7 +38,7 @@ func main() {
 		log.Fatal("error: couldn't find the port in environment")
 	}
 
-	appCfg, err := app.NewAppConfig()
+	appCfg, err := web.NewWebConfig()
 	if err != nil {
 		log.Fatal(err)
 	}

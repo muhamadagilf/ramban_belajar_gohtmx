@@ -1,4 +1,4 @@
-package app
+package web
 
 import (
 	"crypto/sha256"
@@ -18,13 +18,13 @@ import (
 
 type Data map[string]interface{}
 
-func (config *appConfig) GetStudentSubmitPage(c echo.Context) error {
+func (config *webConfig) GetStudentSubmitPage(c echo.Context) error {
 	return c.Render(http.StatusOK, "student-submission", Data{
 		"Major": MAJOR,
 	})
 }
 
-func (config *appConfig) CreateStudent(c echo.Context) error {
+func (config *webConfig) CreateStudent(c echo.Context) error {
 	time.Sleep(300 * time.Millisecond)
 	var nim string
 	ctx := c.Request().Context()
@@ -60,7 +60,7 @@ func (config *appConfig) CreateStudent(c echo.Context) error {
 		// simply generate from the student-nim
 		if err != nil {
 			nim, _ = qtx.GetCollectionMetaValue(ctx, "student-nim")
-			qtx.IncrementStudentNim(ctx)
+			qtx.IncrementValueByname(ctx, "student-nim")
 			log.Println("\n\nstudent creation process...")
 		}
 
@@ -69,8 +69,9 @@ func (config *appConfig) CreateStudent(c echo.Context) error {
 			return fmt.Errorf("line 61")
 		}
 
+		// get the additional student info
+		// and doing creation
 		studentDat := c.Get("studentData").(*StudentData)
-
 		student, err := qtx.CreateStudent(ctx, database.CreateStudentParams{
 			Nim:         nim,
 			Nip:         int32(nip),
@@ -86,8 +87,7 @@ func (config *appConfig) CreateStudent(c echo.Context) error {
 			return err
 		}
 
-		c.Set("createdStudent", &student)
-
+		// add the student to the classroom
 		err = qtx.SetStudentClassroom(ctx, database.SetStudentClassroomParams{
 			RoomID:    student.RoomID,
 			StudentID: student.ID,
@@ -96,6 +96,11 @@ func (config *appConfig) CreateStudent(c echo.Context) error {
 		if err != nil {
 			return err
 		}
+
+		// updated the collection_meta "-StudentCount", increment the count
+		// to keep track of the member of class
+		studentClassCount := studentDat.StudyPlan.Major + "-StudentCount"
+		qtx.IncrementValueByname(ctx, studentClassCount)
 
 		// update updated_at for Last-Modified Header (caching)
 		qtx.UpdateCollectionMetaLastModified(ctx, "student-coll")
@@ -114,14 +119,18 @@ func (config *appConfig) CreateStudent(c echo.Context) error {
 	return c.NoContent(http.StatusCreated)
 }
 
-func (config *appConfig) GetStudentsPage(c echo.Context) error {
+func (config *webConfig) GetStudentsPage(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	// retrieves all the necessary data, including query params handling
 	// do some filter & search querying
 	studentsPageData, err := studentsQueryParamHandler(c, config.Server.Queries)
 	if err != nil {
-		return c.String(http.StatusBadRequest, err.Error())
+		return c.String(
+			http.StatusBadRequest,
+			fmt.Sprintf("Dont tryna act smart now, you cheeky bastard. \n%v",
+				err.Error()),
+		)
 	}
 
 	studentsPageData["Rooms"] = ROOM
@@ -147,7 +156,7 @@ func (config *appConfig) GetStudentsPage(c echo.Context) error {
 	return c.Render(http.StatusOK, "students", studentsPageData)
 }
 
-func (config *appConfig) DeleteStudent(c echo.Context) error {
+func (config *webConfig) DeleteStudent(c echo.Context) error {
 	time.Sleep(300 * time.Millisecond)
 	ctx := c.Request().Context()
 	err := handler.WithTX(ctx, config.Server.DB, config.Server.Queries, func(qtx *database.Queries) error {
@@ -163,6 +172,12 @@ func (config *appConfig) DeleteStudent(c echo.Context) error {
 		if err != nil {
 			return err
 		}
+
+		// updated the collection_meta "-StudentCount"
+		// decrement the student count, if there is deletion
+		studentPlan, _ := qtx.GetStudyPlanById(ctx, student.StudyPlanID)
+		studentClassCount := studentPlan.Major + "-StudentCount"
+		qtx.DecrementValueByName(ctx, studentClassCount)
 
 		// simply, add the nim to freelist, if there is student deletion
 		qtx.AddToFreelist(ctx, student.Nim)
@@ -187,7 +202,7 @@ func (config *appConfig) DeleteStudent(c echo.Context) error {
 	return c.Render(http.StatusSeeOther, "completion-message", Data{"Message": "Deletion Complete"})
 }
 
-func (config *appConfig) GetStudentProfile(c echo.Context) error {
+func (config *webConfig) GetStudentProfile(c echo.Context) error {
 	// retrieve all necessary data
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
@@ -226,7 +241,7 @@ func (config *appConfig) GetStudentProfile(c echo.Context) error {
 	return c.Render(http.StatusOK, "student-profile", Data{"Student": student, "Plan": plan, "Room": room})
 }
 
-func (config *appConfig) GetUpdateStudentPage(c echo.Context) error {
+func (config *webConfig) GetUpdateStudentPage(c echo.Context) error {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
@@ -241,7 +256,7 @@ func (config *appConfig) GetUpdateStudentPage(c echo.Context) error {
 	return c.Render(http.StatusOK, "update-student", Data{"Student": student})
 }
 
-func (config *appConfig) UpdateStudent(c echo.Context) error {
+func (config *webConfig) UpdateStudent(c echo.Context) error {
 	time.Sleep(300 * time.Millisecond)
 	ctx := c.Request().Context()
 	idStr := c.Param("id")

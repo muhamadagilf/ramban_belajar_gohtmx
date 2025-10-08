@@ -12,10 +12,15 @@ UPDATE collection_meta
 SET updated_at = NOW()
 WHERE name = $1;
 
--- name: IncrementStudentNim :exec
+-- name: IncrementValueByname :exec
 UPDATE collection_meta
 SET value = (CAST(value as INTEGER)+1)::VARCHAR
-WHERE name = 'student-nim';
+WHERE name = $1;
+
+-- name: DecrementValueByName :exec
+UPDATE collection_meta
+SET value = (CAST(value as INTEGER)-1)::VARCHAR
+WHERE name = $1;
 
 -- name: GetFreelistNim :one
 SELECT value FROM collection_meta
