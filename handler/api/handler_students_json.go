@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -44,30 +43,65 @@ func (config *apiConfig) HandlerGetStudents(c echo.Context) error {
 	return c.JSON(http.StatusOK, studentsJSONFormat(students))
 }
 
+func (config *apiConfig) HandlerGetStudentByID(c echo.Context) error {
+	ctx := c.Request().Context()
+	qtx := config.Server.Queries
+	var param struct {
+		ID string `param:"id"`
+	}
+
+	if err := c.Bind(&param); err != nil {
+		return c.JSON(http.StatusBadRequest, Data{"error": err.Error()})
+	}
+
+	if err := c.Validate(&param); err != nil {
+		return c.JSON(http.StatusBadRequest, Data{"error": err.Error()})
+	}
+
+	id, err := uuid.Parse(param.ID)	
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, Data{"error": err.Error()})
+	}
+
+	student, err := qtx.GetStudentById(ctx, id)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, Data{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, studentJSONFormat(student))
+
+}
+
 func (config *apiConfig) HandlerCreateStudent(c echo.Context) error {
 	ctx := c.Request().Context()
 	qtx := config.Server.Queries
 
-	var param struct {
-		Name        string `json:"name" validate:"nochars"`
-		Email       string `json:"email" validate:"email_constraints"`
+	var reqBody struct {
+		Name        string `json:"name" validate:"nochars,cheeky_sql_inject"`
+		Email       string `json:"email" validate:"email_constraints,cheeky_sql_inject"`
 		PhoneNumber string `json:"phone_number" validate:"phone_constraints"`
 		Major       string `json:"major" validate:"oneof_major,nochars"`
-		Nip         string `json:"nip"`
+		Nip         string `json:"nip" validate:"nip_constraints"`
+		DateOfBirth string `json:"date_of_birth" validate:"dob_constraints,cheeky_sql_inject"`
 	}
 
 	err := handler.WithTX(ctx, config.Server.DB, qtx, func(qtx *database.Queries) error {
-		if err := c.Bind(&param); err != nil {
+		if err := c.Bind(&reqBody); err != nil {
 			return fmt.Errorf("here daddy 63, %v", err.Error())
 		}
 
-		if err := c.Validate(&param); err != nil {
+		if err := c.Validate(&reqBody); err != nil {
 			return fmt.Errorf("here daddy 67, %v", err.Error())
 		}
 
-		nip, err := strconv.ParseInt(param.Nip, 10, 64)
+		log.Println(reqBody.DateOfBirth)
+		if !handler.IsNIPValid(reqBody.Nip, reqBody.DateOfBirth) {
+			return fmt.Errorf("here daddy 69, %v", ERROR_INVALID_NIP)
+		}
+
+		studentBirthDate, err := time.Parse(handler.DOBLayout, reqBody.DateOfBirth)
 		if err != nil {
-			return fmt.Errorf("here daddy 70, %v", err.Error())
+			return fmt.Errorf("here daddy 74, %v", err)
 		}
 
 		// if free nim exists, get the smallest nim for the new created student
@@ -89,12 +123,13 @@ func (config *apiConfig) HandlerCreateStudent(c echo.Context) error {
 
 		studentData := c.Get("studentInfo").(*studentData)
 		student, err := qtx.CreateStudent(ctx, database.CreateStudentParams{
-			Name:        strings.ToLower(param.Name),
-			Email:       param.Email,
-			PhoneNumber: param.PhoneNumber,
-			Nip:         int32(nip),
+			Name:        strings.ToLower(reqBody.Name),
+			Email:       reqBody.Email,
+			PhoneNumber: reqBody.PhoneNumber,
+			Nip:         reqBody.Nip,
 			Year:        int32(time.Now().Year()),
 			Nim:         nim,
+			DateOfBirth: studentBirthDate,
 			StudyPlanID: studentData.StudyPlan.ID,
 			RoomID:      studentData.Room.ID,
 		})

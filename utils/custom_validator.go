@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/go-playground/validator/v10"
-	web "github.com/muhamadagilf/rambanbelajar_gohtmx/handler/app"
+	"github.com/muhamadagilf/rambanbelajar_gohtmx/handler/web"
 )
 
 var sqlQueryWord = []string{"select", "delete", "update", "create", "table", "insert"}
@@ -53,6 +53,16 @@ func NewCustomValidator() *CustomValidator {
 	v.RegisterValidation("cheeky_sql_inject", func(fl validator.FieldLevel) bool {
 		searchVal := fl.Field().String()
 		return !slices.Contains(sqlQueryWord, strings.ToLower(searchVal))
+	})
+
+	v.RegisterValidation("nip_constraints", func(fl validator.FieldLevel) bool {
+		nip := fl.Field().String()
+		return regexp.MustCompile(`^[0-9]{16}`).MatchString(nip)
+	})
+
+	v.RegisterValidation("dob_constraints", func(fl validator.FieldLevel) bool {
+		dob := fl.Field().String()
+		return regexp.MustCompile(`^[0-9]{2}\-[a-zA-z]+\-[0-9]{4}$`).MatchString(dob)
 	})
 
 	return &CustomValidator{validator: v}

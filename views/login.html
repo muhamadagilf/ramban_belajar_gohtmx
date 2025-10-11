@@ -1,0 +1,53 @@
+{{ block "login" . }}
+<!DOCTYPE html>
+<html>
+    {{ template "head" . }}
+    <title>Login</title>
+    <body class="bg-[whitesmoke]">
+      <div id="wrapper-content" class="h-[80vh] flex flex-col
+      items-center justify-center gap-[2rem]">
+        <div class="logo flex items-center gap-[.6rem]
+        font-semibold text-[2rem]">
+          <i class="fa-solid fa-graduation-cap"></i>
+          <span>RambanBelajar</span>
+        </div>        
+        <form
+            class="bg-[white] w-[30%] p-[2rem] flex flex-col gap-[1rem]
+            border border-gray-400 shadow-sm rounded-sm
+            "
+          >
+            <div
+              class="wrapper-inpt flex flex-col
+              bg-gray-300 rounded pt-[.6rem] pl-[.6rem] pb-[.3rem]
+              "
+              >
+                <label for="email " class="font-semibold">Email</label>
+                <input class="outline-none h-[3.5vh] text-[1.3rem] font-semibold"
+                  type="email" name="email" id="email" autofocus>
+            </div>
+            <div
+              class="wrapper-inpt flex flex-col
+              bg-gray-300 rounded pt-[.6rem] pl-[.6rem] pb-[.3rem]
+              "
+              >
+                <label for="password" class="font-semibold">Password</label>
+                <input class="outline-none h-[3vh] text-[1.3rem] font-semibold"
+                  type="password" name="password" id="password">
+            </div>
+            <div class="btns flex flex-col gap-[.2rem] [&>button]:cursor-pointer">
+              <button
+                type="submit"
+                class="mt-[.6rem] bg-blue-600 w-[100%] py-[.5rem]
+                font-bold text-[white] rounded shadow-sm uppercase"  
+              >Login</button>
+              <button
+                type="sign up"
+                class="mt-[.6rem] bg-gray-400 w-[100%] py-[.5rem]
+                font-bold text-[white] rounded shadow-sm uppercase"  
+              >sign up</button>
+            </div>
+        </form>
+      </div>
+    </body>
+</html>
+{{ end }}

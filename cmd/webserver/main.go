@@ -10,16 +10,15 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
-	web "github.com/muhamadagilf/rambanbelajar_gohtmx/handler/app"
+	"github.com/muhamadagilf/rambanbelajar_gohtmx/handler/web"
 	"github.com/muhamadagilf/rambanbelajar_gohtmx/utils"
 )
 
-// helper to render html
 type Templates struct {
 	templates *template.Template
 }
 
-func (t *Templates) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
+func (t *Templates) Render(w io.Writer, name string, data any, c echo.Context) error {
 	return t.templates.ExecuteTemplate(w, name, data)
 }
 
@@ -29,6 +28,7 @@ func newTemplate() *Templates {
 	}
 }
 
+// example
 func main() {
 
 	godotenv.Load(".env")
@@ -38,29 +38,31 @@ func main() {
 		log.Fatal("error: couldn't find the port in environment")
 	}
 
-	appCfg, err := web.NewWebConfig()
+	webCfg, err := web.NewWebConfig()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	defer appCfg.Server.DB.Close()
+	defer webCfg.Server.DB.Close()
 
 	e := echo.New()
 	e.Use(middleware.Logger())
+	e.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(50)))
 
 	e.Validator = utils.NewCustomValidator()
 	e.Renderer = newTemplate()
 	e.Static("/static", "static")
 
-	e.GET("/", appCfg.GetHomePage)
+	e.GET("/login", webCfg.GetLoginPage)
 
-	e.GET("/students", appCfg.GetStudentsPage)
-	e.GET("/students/submission", appCfg.GetStudentSubmitPage)
-	e.POST("/students/submission", appCfg.CreateStudent, appCfg.MiddlewareStudent)
-	e.GET("/students/:id/profile", appCfg.GetStudentProfile)
-	e.GET("/students/:id/profile/update", appCfg.GetUpdateStudentPage)
-	e.PUT("/students/:id/profile/update", appCfg.UpdateStudent)
-	e.DELETE("/students/:id/profile", appCfg.DeleteStudent)
+	e.GET("/", webCfg.GetHomePage)
+	e.GET("/students", webCfg.GetStudentsPage)
+	e.GET("/students/submission", webCfg.GetStudentSubmitPage)
+	e.POST("/students/submission", webCfg.CreateStudent, webCfg.MiddlewareStudent)
+	e.GET("/students/:id/profile", webCfg.GetStudentProfile)
+	e.GET("/students/:id/profile/update", webCfg.GetUpdateStudentPage)
+	e.PUT("/students/:id/profile/update", webCfg.UpdateStudent)
+	e.DELETE("/students/:id/profile", webCfg.DeleteStudent)
 
 	e.Logger.Fatal(e.Start(":" + portStr))
 

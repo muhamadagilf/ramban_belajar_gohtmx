@@ -1,7 +1,6 @@
 package web
 
 import (
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -17,32 +16,6 @@ var YEAR = time.Now().Year()
 
 type webConfig struct {
 	Server *server.Server
-}
-
-func submissionErrorMsg(err string) string {
-	err = strings.ToLower(err)
-	if strings.Contains(err, `violates check constraint "students_phone_number_check"`) {
-		return "error: invalid phone number, please input the correct number"
-	}
-
-	if strings.Contains(err, `violates unique constraint "students_phone_number_key"`) {
-		return "error: cannot input phone number, number already exists"
-	}
-
-	if strings.Contains(err, `violates unique constraint "students_email_key"`) {
-		return "error: cannot input email, email already exists"
-	}
-
-	if strings.Contains(err, `violates unique constraint "students_nip_key"`) {
-		return "error: cannot input NIP, NIP already exists"
-	}
-
-	return err
-}
-
-func isEmailValid(e string) bool {
-	emailRegex := regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`)
-	return emailRegex.MatchString(e)
 }
 
 func studentsQueryParamHandler(c echo.Context, qtx *database.Queries) (Data, error) {

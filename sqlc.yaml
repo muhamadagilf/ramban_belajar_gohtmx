@@ -2,6 +2,7 @@ version: "2"
 sql:
   - schema:
       - "sql/schema/migrations"
+      - "sql/schema/migrations/continue"
       - "sql/schema"
     queries: "sql/queries"
     engine: "postgresql"

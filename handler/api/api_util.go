@@ -13,6 +13,7 @@ import (
 )
 
 var ERROR_CLASS_FULL = "cannot assign to the major, due to the full student"
+var ERROR_INVALID_NIP = "error: invalid nomer induk pengguna (nip), please check your birthdate/nip"
 
 type apiConfig struct {
 	Server *server.Server

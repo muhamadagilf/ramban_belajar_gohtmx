@@ -2,3 +2,5 @@ step.txt
 .env
 tmp
 rest-json
+localDB.session.sql
+.vscode

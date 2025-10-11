@@ -27,6 +27,7 @@ func main() {
 	e.Validator = utils.NewCustomValidator()
 
 	e.Use(middleware.Logger())
+	e.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(50)))
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"*"},
 		AllowMethods: []string{
@@ -45,6 +46,7 @@ func main() {
 		handlerFunc.HandlerCreateStudent,
 		handlerFunc.HandlerMiddlewareStudent,
 	)
+	routerV1.GET("/students/get/:id", handlerFunc.HandlerGetStudentByID)
 	routerV1.DELETE("/students/delete/:id", handlerFunc.HandlerDeleteStudent)
 
 	e.Logger.Fatal(e.Start(":" + "8080"))

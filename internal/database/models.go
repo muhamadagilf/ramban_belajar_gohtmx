@@ -37,7 +37,7 @@ type Student struct {
 	ID          uuid.UUID
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
-	Nip         int32
+	Nip         string
 	Name        string
 	Email       string
 	Year        int32
@@ -45,6 +45,8 @@ type Student struct {
 	StudyPlanID uuid.UUID
 	PhoneNumber string
 	Nim         string
+	DateOfBirth time.Time
+	UserID      uuid.UUID
 }
 
 type StudyPlan struct {
@@ -53,4 +55,13 @@ type StudyPlan struct {
 	UpdatedAt time.Time
 	Semester  int32
 	Major     string
+}
+
+type User struct {
+	ID           uuid.UUID
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	Email        string
+	PasswordHash string
+	Role         string
 }

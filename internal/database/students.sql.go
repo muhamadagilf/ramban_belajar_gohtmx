@@ -13,13 +13,25 @@ import (
 )
 
 const createStudent = `-- name: CreateStudent :one
-INSERT INTO students (nip, name, email, year, room_id, study_plan_id, phone_number, nim)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-RETURNING id, created_at, updated_at, nip, name, email, year, room_id, study_plan_id, phone_number, nim
+INSERT INTO
+students (
+        nip, 
+        name, 
+        email, 
+        year,
+        room_id,
+        study_plan_id,
+        phone_number, 
+        nim, 
+        date_of_birth,
+        user_id
+)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+RETURNING id, created_at, updated_at, nip, name, email, year, room_id, study_plan_id, phone_number, nim, date_of_birth, user_id
 `
 
 type CreateStudentParams struct {
-	Nip         int32
+	Nip         string
 	Name        string
 	Email       string
 	Year        int32
@@ -27,6 +39,8 @@ type CreateStudentParams struct {
 	StudyPlanID uuid.UUID
 	PhoneNumber string
 	Nim         string
+	DateOfBirth time.Time
+	UserID      uuid.UUID
 }
 
 func (q *Queries) CreateStudent(ctx context.Context, arg CreateStudentParams) (Student, error) {
@@ -39,6 +53,8 @@ func (q *Queries) CreateStudent(ctx context.Context, arg CreateStudentParams) (S
 		arg.StudyPlanID,
 		arg.PhoneNumber,
 		arg.Nim,
+		arg.DateOfBirth,
+		arg.UserID,
 	)
 	var i Student
 	err := row.Scan(
@@ -53,6 +69,8 @@ func (q *Queries) CreateStudent(ctx context.Context, arg CreateStudentParams) (S
 		&i.StudyPlanID,
 		&i.PhoneNumber,
 		&i.Nim,
+		&i.DateOfBirth,
+		&i.UserID,
 	)
 	return i, err
 }
@@ -60,7 +78,7 @@ func (q *Queries) CreateStudent(ctx context.Context, arg CreateStudentParams) (S
 const deleteStudentById = `-- name: DeleteStudentById :one
 DELETE FROM students
 WHERE id = $1
-RETURNING id, created_at, updated_at, nip, name, email, year, room_id, study_plan_id, phone_number, nim
+RETURNING id, created_at, updated_at, nip, name, email, year, room_id, study_plan_id, phone_number, nim, date_of_birth, user_id
 `
 
 func (q *Queries) DeleteStudentById(ctx context.Context, id uuid.UUID) (Student, error) {
@@ -78,12 +96,14 @@ func (q *Queries) DeleteStudentById(ctx context.Context, id uuid.UUID) (Student,
 		&i.StudyPlanID,
 		&i.PhoneNumber,
 		&i.Nim,
+		&i.DateOfBirth,
+		&i.UserID,
 	)
 	return i, err
 }
 
 const getStudentAll = `-- name: GetStudentAll :many
-SELECT id, created_at, updated_at, nip, name, email, year, room_id, study_plan_id, phone_number, nim FROM students
+SELECT id, created_at, updated_at, nip, name, email, year, room_id, study_plan_id, phone_number, nim, date_of_birth, user_id FROM students
 ORDER BY updated_at DESC
 `
 
@@ -108,6 +128,8 @@ func (q *Queries) GetStudentAll(ctx context.Context) ([]Student, error) {
 			&i.StudyPlanID,
 			&i.PhoneNumber,
 			&i.Nim,
+			&i.DateOfBirth,
+			&i.UserID,
 		); err != nil {
 			return nil, err
 		}
@@ -123,7 +145,7 @@ func (q *Queries) GetStudentAll(ctx context.Context) ([]Student, error) {
 }
 
 const getStudentById = `-- name: GetStudentById :one
-SELECT id, created_at, updated_at, nip, name, email, year, room_id, study_plan_id, phone_number, nim FROM students
+SELECT id, created_at, updated_at, nip, name, email, year, room_id, study_plan_id, phone_number, nim, date_of_birth, user_id FROM students
 WHERE id = $1
 `
 
@@ -142,12 +164,14 @@ func (q *Queries) GetStudentById(ctx context.Context, id uuid.UUID) (Student, er
 		&i.StudyPlanID,
 		&i.PhoneNumber,
 		&i.Nim,
+		&i.DateOfBirth,
+		&i.UserID,
 	)
 	return i, err
 }
 
 const getStudentByNameOrNim = `-- name: GetStudentByNameOrNim :many
-SELECT id, created_at, updated_at, nip, name, email, year, room_id, study_plan_id, phone_number, nim FROM students
+SELECT id, created_at, updated_at, nip, name, email, year, room_id, study_plan_id, phone_number, nim, date_of_birth, user_id FROM students
 WHERE name LIKE $1 AND nim LIKE $2
 `
 
@@ -177,6 +201,8 @@ func (q *Queries) GetStudentByNameOrNim(ctx context.Context, arg GetStudentByNam
 			&i.StudyPlanID,
 			&i.PhoneNumber,
 			&i.Nim,
+			&i.DateOfBirth,
+			&i.UserID,
 		); err != nil {
 			return nil, err
 		}
@@ -256,7 +282,7 @@ const updateStudent = `-- name: UpdateStudent :one
 UPDATE students
 SET email = $2, phone_number = $3, updated_at = $4
 WHERE id = $1
-RETURNING id, created_at, updated_at, nip, name, email, year, room_id, study_plan_id, phone_number, nim
+RETURNING id, created_at, updated_at, nip, name, email, year, room_id, study_plan_id, phone_number, nim, date_of_birth, user_id
 `
 
 type UpdateStudentParams struct {
@@ -286,6 +312,8 @@ func (q *Queries) UpdateStudent(ctx context.Context, arg UpdateStudentParams) (S
 		&i.StudyPlanID,
 		&i.PhoneNumber,
 		&i.Nim,
+		&i.DateOfBirth,
+		&i.UserID,
 	)
 	return i, err
 }

@@ -1,7 +1,19 @@
 
 -- name: CreateStudent :one
-INSERT INTO students (nip, name, email, year, room_id, study_plan_id, phone_number, nim)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+INSERT INTO
+students (
+        nip, 
+        name, 
+        email, 
+        year,
+        room_id,
+        study_plan_id,
+        phone_number, 
+        nim, 
+        date_of_birth,
+        user_id
+)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 RETURNING *;
 
 -- name: GetStudentAll :many
