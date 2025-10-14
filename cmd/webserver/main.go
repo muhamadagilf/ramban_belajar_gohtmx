@@ -54,6 +54,7 @@ func main() {
 	e.Static("/static", "static")
 
 	e.GET("/login", webCfg.GetLoginPage)
+	e.POST("/login", webCfg.LetUserLogin, utils.LoginLimiter)
 
 	e.GET("/", webCfg.GetHomePage)
 	e.GET("/students", webCfg.GetStudentsPage)

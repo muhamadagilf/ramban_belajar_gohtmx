@@ -2,6 +2,7 @@ package web
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/muhamadagilf/rambanbelajar_gohtmx/handler"
@@ -16,6 +17,7 @@ func (config *webConfig) GetLoginPage(c echo.Context) error {
 }
 
 func (config *webConfig) LetUserLogin(c echo.Context) error {
+	time.Sleep(300 * time.Millisecond)
 	ctx := c.Request().Context()
 	query := config.Server.Queries
 	type formParams struct {
@@ -34,7 +36,7 @@ func (config *webConfig) LetUserLogin(c echo.Context) error {
 
 	// authentication here
 	// and check the password, if valid let user login
-	// if not punch ERROR_USER_UNAUTHENTICATED
+	// if not punch w ERROR_USER_UNAUTHENTICATED
 	hash, err := query.GetUserHash(ctx, params.Email)
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())

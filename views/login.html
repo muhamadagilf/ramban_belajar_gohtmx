@@ -3,7 +3,8 @@
 <html>
     {{ template "head" . }}
     <title>Login</title>
-    <body class="bg-[whitesmoke]">
+    <body>
+      {{ template "loader" . }}
       <div id="wrapper-content" class="h-[80vh] flex flex-col
       items-center justify-center gap-[2rem]">
         <div class="logo flex items-center gap-[.6rem]
@@ -12,39 +13,38 @@
           <span>RambanBelajar</span>
         </div>        
         <form
+            hx-POST="/login" hx-indicator="#loader-indicator"
             class="bg-[white] w-[30%] p-[2rem] flex flex-col gap-[1rem]
             border border-gray-400 shadow-sm rounded-sm
             "
           >
             <div
-              class="wrapper-inpt flex flex-col
-              bg-gray-300 rounded pt-[.6rem] pl-[.6rem] pb-[.3rem]
+              class="wrapper-inpt flex flex-col gap-[.5rem]
+              border border-gray-400 rounded pt-[.5rem] pl-[.6rem] pb-[.4rem]
               "
               >
-                <label for="email " class="font-semibold">Email</label>
-                <input class="outline-none h-[3.5vh] text-[1.3rem] font-semibold"
+                <label for="email" class="font-semibold  text-[.9rem]">Email</label>
+                <input class="outline-none h-[3vh] text-[1.2rem]" required
                   type="email" name="email" id="email" autofocus>
             </div>
             <div
-              class="wrapper-inpt flex flex-col
-              bg-gray-300 rounded pt-[.6rem] pl-[.6rem] pb-[.3rem]
+              class="wrapper-inpt flex flex-col gap-[.5rem]
+              border border-gray-400 rounded pt-[.5rem] pl-[.6rem] pb-[.4rem]
               "
               >
-                <label for="password" class="font-semibold">Password</label>
-                <input class="outline-none h-[3vh] text-[1.3rem] font-semibold"
+                <label for="password" class="font-semibold text-[.9rem]">Password</label>
+                <input class="outline-none h-[3vh] text-[1.2rem]" required
                   type="password" name="password" id="password">
             </div>
-            <div class="btns flex flex-col gap-[.2rem] [&>button]:cursor-pointer">
+            <div class="btns flex flex-col items-center gap-[.8rem] [&>button]:cursor-pointer">
               <button
                 type="submit"
                 class="mt-[.6rem] bg-blue-600 w-[100%] py-[.5rem]
-                font-bold text-[white] rounded shadow-sm uppercase"  
+                font-bold text-[white] rounded-md shadow-sm uppercase"  
               >Login</button>
-              <button
-                type="sign up"
-                class="mt-[.6rem] bg-gray-400 w-[100%] py-[.5rem]
-                font-bold text-[white] rounded shadow-sm uppercase"  
-              >sign up</button>
+              <a href="/students/submission"
+                class="uppercase underline"  
+              >sign up</a>
             </div>
         </form>
       </div>

@@ -18,8 +18,6 @@ import (
 
 type Data map[string]any
 
-var errInvalidNIP = errors.New("error: invalid nomer induk pengguna (nip), please check your birthdate/nip")
-
 func (config *webConfig) GetStudentSubmitPage(c echo.Context) error {
 	return c.Render(http.StatusOK, "student-submission", Data{
 		"Major": MAJOR,
@@ -30,33 +28,39 @@ func (config *webConfig) CreateStudent(c echo.Context) error {
 	time.Sleep(300 * time.Millisecond)
 	ctx := c.Request().Context()
 	type formParams struct {
-		Name        string `validate:"alpha,cheeky_sql_inject"`
-		Email       string `validate:"email_constraints"`
-		PhoneNumber string `validate:"phone_constraints"`
-		Nip         string `validate:"nip_constraints"`
-		DateOfBirth string `validate:"cheeky_sql_inject"`
-		Password    string
+		Name            string `validate:"name_constraints,cheeky_sql_inject"`
+		Email           string `validate:"email_constraints,cheeky_sql_inject"`
+		PhoneNumber     string `validate:"phone_constraints"`
+		Nip             string `validate:"nip_constraints"`
+		DateOfBirth     string `validate:"cheeky_sql_inject"`
+		Password        string
+		ConfirmPassword string
 	}
 
 	err := handler.WithTX(ctx, config.Server.DB, config.Server.Queries, func(qtx *database.Queries) error {
 		params := formParams{
-			Name:        c.FormValue("name"),
-			Email:       c.FormValue("email"),
-			PhoneNumber: c.FormValue("phone"),
-			Nip:         c.FormValue("nip"),
-			DateOfBirth: c.FormValue("birthdate"),
-			Password:    c.FormValue("password"),
+			Name:            c.FormValue("fullname"),
+			Email:           c.FormValue("email"),
+			PhoneNumber:     c.FormValue("phone"),
+			Nip:             c.FormValue("nip"),
+			DateOfBirth:     c.FormValue("birthdate"),
+			Password:        c.FormValue("password"),
+			ConfirmPassword: c.FormValue("confirm-password"),
 		}
 
 		if err := c.Validate(&params); err != nil {
 			return err
 		}
 
-		if !handler.IsNIPValid(params.Nip, params.DateOfBirth) {
-			return errInvalidNIP
+		if params.Password != params.ConfirmPassword {
+			return errors.New(handler.ERROR_INVALID_CONFIRM_PASSWORD)
 		}
 
-		studentBirthDate, err := time.Parse(handler.DOBLayout, params.DateOfBirth)
+		if !handler.IsNIPValid(params.Nip, params.DateOfBirth) {
+			return errors.New(handler.ERROR_INVALID_NIP)
+		}
+
+		studentBirthDate, err := time.Parse(time.DateOnly, params.DateOfBirth)
 		if err != nil {
 			return err
 		}
@@ -64,7 +68,6 @@ func (config *webConfig) CreateStudent(c echo.Context) error {
 		// if free nim exists, get the smallest nim for the new created student
 		// and delete the record points to that free nim
 		nim, err := qtx.GetFreelistNim(ctx)
-
 		// checks if there is no free nim to be used
 		// simply generate from the student-nim
 		if err != nil {
@@ -75,7 +78,7 @@ func (config *webConfig) CreateStudent(c echo.Context) error {
 
 		err = qtx.DeleteFreelistNim(ctx, nim)
 		if err != nil {
-			return fmt.Errorf("line 61")
+			return err
 		}
 
 		// hash the user password
@@ -90,7 +93,6 @@ func (config *webConfig) CreateStudent(c echo.Context) error {
 			PasswordHash: hashedPassword,
 			Role:         handler.USER_ROLE_STUDENT,
 		})
-
 		if err != nil {
 			return err
 		}
@@ -108,7 +110,6 @@ func (config *webConfig) CreateStudent(c echo.Context) error {
 			RoomID:      studentDat.Room.ID,
 			UserID:      user.ID,
 		})
-
 		if err != nil {
 			return err
 		}
@@ -118,7 +119,6 @@ func (config *webConfig) CreateStudent(c echo.Context) error {
 			RoomID:    student.RoomID,
 			StudentID: student.ID,
 		})
-
 		if err != nil {
 			return err
 		}
@@ -133,7 +133,6 @@ func (config *webConfig) CreateStudent(c echo.Context) error {
 
 		return nil
 	})
-
 	if err != nil {
 		c.Render(http.StatusUnprocessableEntity, "student-submission", Data{})
 		return c.Render(http.StatusUnprocessableEntity, "error-message", Data{
@@ -186,7 +185,6 @@ func (config *webConfig) DeleteStudent(c echo.Context) error {
 	time.Sleep(300 * time.Millisecond)
 	ctx := c.Request().Context()
 	err := handler.WithTX(ctx, config.Server.DB, config.Server.Queries, func(qtx *database.Queries) error {
-
 		idStr := c.Param("id")
 
 		id, err := uuid.Parse(idStr)
@@ -216,7 +214,6 @@ func (config *webConfig) DeleteStudent(c echo.Context) error {
 
 		return nil
 	})
-
 	if err != nil {
 		c.Render(http.StatusUnprocessableEntity, "students", Data{})
 		return c.Render(http.StatusUnprocessableEntity, "error-message", Data{
@@ -312,7 +309,6 @@ func (config *webConfig) UpdateStudent(c echo.Context) error {
 			PhoneNumber: params.PhoneNumber,
 			UpdatedAt:   time.Now(),
 		})
-
 		if err != nil {
 			return err
 		}
@@ -322,7 +318,6 @@ func (config *webConfig) UpdateStudent(c echo.Context) error {
 
 		return nil
 	})
-
 	if err != nil {
 		c.Render(http.StatusUnprocessableEntity, "update-student", Data{})
 		return c.Render(http.StatusUnprocessableEntity, "error-message", Data{
@@ -330,7 +325,7 @@ func (config *webConfig) UpdateStudent(c echo.Context) error {
 		})
 	}
 
-	redirectUrl := fmt.Sprintf("/student/profile/%v", idStr)
-	c.Response().Header().Set("HX-Redirect", redirectUrl)
+	redirectURL := fmt.Sprintf("/student/profile/%v", idStr)
+	c.Response().Header().Set("HX-Redirect", redirectURL)
 	return c.NoContent(http.StatusOK)
 }

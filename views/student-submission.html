@@ -3,125 +3,156 @@
 <html>
       {{ template "head" . }}
       <title>Student Submission</title>
-      <body class="flex justify-center items-center h-screen bg-[whitesmoke]">
+      <script src="../static/script/studsub.js"></script>
+      <body class="flex flex-col items-center h-screen gap-[2rem]">
             {{ template "loader" . }}
+            <div class="logo mt-[4rem] flex flex-col items-center gap-[.6rem] text-[1.8rem]">
+                  <i class="fa-solid fa-graduation-cap"></i>
+                  <p>Register yourself to <span class="font-semibold ">RambanBelajar</span></p>
+            </div>
             <div
-            id="wrapper-content"
-            class="wrapper-content w-[90%] h-[80%] flex flex-col gap-y-[1rem]
-            rounded shadow-lg bg-[#ffffff] py-[1.5rem] px-[2.5rem]"
-      >
-            <a href="/"
-                  class="back-refresh flex gap-x-[.5rem] shadow-sm border border-gray-300
-                  text-[.7rem] w-fit rounded cursor-pointer items-center px-[.8rem] py-[.3rem] font-semibold
-                  hover:bg-[#0000003a] transition"
-      >
-                  <i class="fa-solid fa-arrow-left"></i>
-                  <span>Back</span>
-            </a>
+                  id="wrapper-content"
+                  class="wrapper-content w-[50%] h-auto flex flex-col gap-y-[1rem]
+                  border border-gray-400 rounded-md shadow-md bg-[#ffffff] py-[1.5rem] px-[2.5rem]"
+            >
             <div class="wrapper-form flex flex-col gap-y-[1rem] h-[100%] mt-[1rem]">
-                  <h2 class="font-semibold">/student/submission</h2>
-                  <form hx-POST="/students/submission" hx-indicator="#loader-indicator"
-                  class="h-[inherit] flex flex-col gap-y-[.8rem]
-                  [&_.wrapper-inpt]:rounded-md [&_.wrapper-inpt]:shadow-md [&_.wrapper-inpt]:border-gray-400 [&_.wrapper-inpt]:border
-                  [&_input]:text-[.9rem] [&_input]:h-[4vh] [&_select]:text-[.9rem] [&_select]:h-[4vh]
-                  [&_label]:text-[.8rem] [&_label]:font-semibold ">
-                        <div class="top-inpts flex gap-x-[1rem] [&>.wrapper-inpt]:h-fit">
-                              <div class="wrapper-inpt flex flex-col w-[50%] pt-[.3rem] pb-[.5rem] px-[.8rem]">
-                                    <label for="email">Email</label>
-                                    <input required type="email" name="email" id="email" placeholder="example@example.com"
-                                    class="outline-none text-[.7rem] h-[3vh]"
-                                    />
-                              </div>
-                              <div class="wrapper-inpt flex flex-col w-[50%] pt-[.3rem] pb-[.5rem] px-[.8rem]">
-                                    <label for="major">Major</label>
-                                    <select name="major" id="major"
-                                    class="outline-none text-[.7rem] h-[3vh] font-semibold">
-                                          {{ range .Major }}
-                                          <option value="{{ . }}">{{ . }}</option>
-                                          {{ end }}
-                                    </select>
-                              </div>
-                        </div>
-                        <div class="bottom-inpts flex gap-x-[1rem] [&>.wrapper-inpt]:h-fit">
-                              <div class="wrapper-inpt flex flex-col w-[40%] pt-[.3rem] pb-[.5rem] px-[.8rem]">
-                                    <label for="name">Fullname</label>
-                                    <input type="text" name="name" id="name" placeholder="John Doe"
-                                    class="outline-none">
-                              </div>
-                              <div class="wrapper-inpt flex flex-col w-[40%] pt-[.3rem] pb-[.5rem] px-[.8rem]">
-                                    <label for="phone">Phone</label>
-                                    <input type="text" name="phone" id="phone" placeholder="+621113334445"
-                                    class="outline-none">
-                              </div>
-                              <div class="wrapper-inpt flex flex-col w-[40%] pt-[.3rem] pb-[.5rem] px-[.8rem]">
-                                    <label for="nip">Nomer Induk Pengguna</label>
-                                    <input type="text" name="nip" id="nip"
-                                    class="outline-none">
-                              </div>
-                        </div>
-                        <div class="t-and-c text-[.8rem] pl-[1rem] mt-[1rem]">
-                              <ul class="flex justify-between gap-x-[2.2rem] list-decimal text-justify underline">
-                                    <div class="w-[50%]">
-                                          <li>
-                                          The information provided in this form is true, accurate, and complete
-                                          to the best of my knowledge.
-                                          </li>
-                                          <li>
-                                          I understand that any false or misleading information may result in
-                                          the rejection of my submission or further disciplinary action as per
-                                          college regulations.
-                                          </li>
-                                          <li>
-                                          I agree to comply with all academic and administrative policies of the
-                                          college related to semester registration and submissions.
-                                          </li>
+                  <form class="flex flex-col gap-[2.5rem]"
+                  hx-POST="/students/submission" hx-indicator="#loader-indicator">
+
+                        <div id="first-inpts" class="flex justify-between items-start">
+                              <div class="left-inpts w-[45%] flex flex-col gap-[1rem]">
+                                    <div class="wrapper-inpt flex flex-col gap-[.5rem]
+                                    [&>label]:font-semibold">
+                                          <label for="fullname">Fullname</label>
+                                          <input required class="border border-gray-400 rounded h-[4.5vh]
+                                          px-[1rem] outline-blue-600"
+                                          type="text" name="fullname" id="fullname">
                                     </div>
-                                    <div class="w-[50%]">
-                                          <li>
-                                          I acknowledge that the college reserves the right to verify the
-                                          details submitted and request additional documentation if necessary.
-                                          </li>
-                                          <li>
-                                          I accept that late submissions may be subject to penalties or may not
-                                          be accepted, in accordance with the deadlines set by the college.
-                                          </li>
+                                    <div class="wrapper-inpt flex flex-col gap-[.5rem]
+                                    [&>label]:font-semibold">
+                                          <label for="phone">Phone</label>
+                                          <input required class="border border-gray-400 rounded h-[4.5vh]
+                                          px-[1rem] outline-blue-600"
+                                          type="text" name="phone" id="phone">
                                     </div>
-                              </ul>
+                                    <div class="wrapper-inpt flex flex-col gap-[.5rem]
+                                    [&>label]:font-semibold">
+                                          <label for="birthdate">Birthdate</label>
+                                          <input required class="border border-gray-400 rounded h-[4.5vh]
+                                          px-[1rem] outline-blue-600"
+                                          type="date" name="birthdate" id="birthdate">
+                                    </div>
+                              </div>
+                              <div class="right-inpts w-[45%] flex flex-col gap-[1rem]">
+                                    <div class="wrapper-inpt flex flex-col gap-[.5rem]
+                                    [&>label]:font-semibold">
+                                          <label for="nip">Nomer Induk Pengguna</label>
+                                          <input required class="border border-gray-400 rounded h-[4.5vh]
+                                          px-[1rem] outline-blue-600"
+                                          type="text" name="nip" id="nip">
+                                    </div>
+                                    <div class="wrapper-inpt flex flex-col gap-[.5rem]
+                                    [&>label]:font-semibold">
+                                          <label for="major">Major</label>
+                                          <select required class="border border-gray-400 rounded h-[4.5vh]
+                                          px-[1rem] cursor-pointer outline-blue-600" 
+                                          name="major" id="major">
+                                                {{ range .Major }}
+                                                <option value="{{ . }}">{{ . }}</option>
+                                                {{ end }}
+                                          </select>
+                                    </div>
+                              </div>
                         </div>
-                        <div class="check-tc flex items-center gap-x-[.5rem] w-[50%]">
-                              <input type="checkbox" name="check" id="agreeCheck" />
-                              <p class="text-[.75rem]">
-                                    I have read and understood the Terms & Conditions and agree to abide by
-                                    them.
-                              </p>
+
+                        <div id="second-inpts" class="hidden flex flex-col gap-[1rem]">
+                               <div class="wrapper-inpt flex flex-col gap-[.5rem]
+                                    [&>label]:font-semibold">
+                                          <label for="Email">Email</label>
+                                          <input required class="border border-gray-400 rounded h-[4.5vh]
+                                          px-[1rem] outline-blue-600"
+                                          type="email" name="email" id="email">
+                                    </div>
+                                    <div class="wrapper-inpt flex flex-col gap-[.5rem]
+                                    [&>label]:font-semibold">
+                                          <label for="password">Password</label>
+                                          <input required class="border border-gray-400 rounded h-[4.5vh]
+                                          px-[1rem] outline-blue-600"
+                                          type="password" name="password" id="password">
+                                    </div>
+
+                                    <!-- Password Strength Checklist -->
+                                    <div id="password-checklist" class="p-4 rounded-lg">
+                                        <p class="text-[.8rem] font-semibold text-gray-600 mb-2">Password requirements:</p>
+                                        <ul class="space-y-1">
+                                            <!-- Length Requirement -->
+                                            <li id="req-length" class="flex items-center text-sm text-red-500 transition-colors duration-200">
+                                                <!-- Icon Placeholder (X or Check) -->
+                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                                Minimum 8 characters
+                                            </li>
+                                            <!-- Lowercase Requirement -->
+                                            <li id="req-lower" class="flex items-center text-sm text-red-500 transition-colors duration-200">
+                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                                Contains a lowercase letter (a-z)
+                                            </li>
+                                            <!-- Uppercase Requirement -->
+                                            <li id="req-upper" class="flex items-center text-sm text-red-500 transition-colors duration-200">
+                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                                Contains an uppercase letter (A-Z)
+                                            </li>
+                                            <!-- Number Requirement -->
+                                            <li id="req-number" class="flex items-center text-sm text-red-500 transition-colors duration-200">
+                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                                Contains a number (0-9)
+                                            </li>
+                                            <!-- Symbol Requirement -->
+                                            <li id="req-symbol" class="flex items-center text-sm text-red-500 transition-colors duration-200">
+                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                                Contains a symbol (!@#$...)
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div class="wrapper-inpt flex flex-col gap-[.5rem]
+                                    [&>label]:font-semibold">
+                                          <label for="confirm-password">Confirm Password</label>
+                                          <input required class="border border-gray-400 rounded h-[4.5vh]
+                                          px-[1rem]"
+                                          type="password" name="confirm-password" id="confirm-password">
+                                    </div>
                         </div>
-                        <div class="btns w-fit flex gap-x-[.5rem]">
-                              <button id="submitBtn"
-                                    type="submit"
-                                    class="submitBtn bg-gray-600 text-white py-[.5rem] px-[.8rem] text-[.7rem]
-                                    rounded shadow-sm border border-gray-300 w-fit font-semibold disabled cursor-not-allowed transition">
-                                    Submit
+                        <div class="btns flex flex-col">
+                              <button id="nextBtn" class="next-btn bg-blue-600 py-[.6rem] cursor-pointer
+                               uppercase text-[white] w-[100%] font-semibold rounded-sm">
+                                    Next
                               </button>
-                              <button type="reset" class="text-[.8rem] font-semibold cursor-pointer">
-                                    Reset
-                              </button>
+
+                              <div id="second-btns" class="hidden flex flex-col gap-[1rem]">
+                                    <button type="submit" id="submitBtn"
+                                    class="bg-blue-600 cursor-pointer py-[.6rem] disabled:bg-gray-600 disabled:cursor-not-allowed
+                                    uppercase text-[white] w-[100%] font-semibold rounded-sm" disabled>
+                                          Submit
+                                    </button>
+                                    <button id="backBtn"
+                                    class="py-[.6rem] cursor-pointer bg-gray-50 border border-gray-400
+                                    uppercase w-[100%] font-semibold rounded-sm">
+                                          Back
+                                    </button>
+                              </div>
                         </div>
                   </form>
             </div>
-      </div>
-      <script>
-            const checkbox = document.getElementById("agreeCheck");
-            const submitBtn = document.getElementById("submitBtn");
-
-            checkbox.addEventListener("change", () => {
-                  submitBtn.disabled = false;
-                  submitBtn.classList.toggle("bg-blue-600", true);
-                  submitBtn.classList.toggle("hover:bg-blue-800", true);
-                  submitBtn.classList.toggle("cursor-pointer", true);
-                  submitBtn.classList.toggle("cursor-not-allowed", false);
-                  submitBtn.classList.toggle("bg-gray-600", false);
-            });
-      </script>
+        </div>
       </body>
 </html>
 {{ end }}

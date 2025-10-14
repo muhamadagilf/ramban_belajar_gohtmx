@@ -1,11 +1,11 @@
+// Package handler
 package handler
 
 import (
 	"context"
 	"database/sql"
+	"log"
 	"net/http"
-	"slices"
-	"strconv"
 	"strings"
 	"time"
 
@@ -19,7 +19,9 @@ const (
 	USER_ROLE_TEACHER = "teacher"
 
 	// error message
-	ERROR_USER_UNAUTHENTICATED = "You're UnAuthenticated User, Cannot Access !!!"
+	ERROR_USER_UNAUTHENTICATED     = "You're UnAuthenticated User, Cannot Access !!!"
+	ERROR_INVALID_NIP              = "error: invalid nomer induk pengguna (nip), please check your birthdate/nip"
+	ERROR_INVALID_CONFIRM_PASSWORD = "error: your confirmation password is invalid"
 )
 
 type dbFunc = func(q *database.Queries) error
@@ -53,34 +55,31 @@ func IsLastModifiedValid(modifiedSince string, lastModified time.Time) bool {
 }
 
 func parseBDay(b string) string {
-	months := []string{
-		"January",
-		"February",
-		"March",
-		"April",
-		"May",
-		"June",
-		"July",
-		"August",
-		"September",
-		"Oktober",
-		"November",
-		"December",
-	}
+	// months := []string{
+	// 	"January",
+	// 	"February",
+	// 	"March",
+	// 	"April",
+	// 	"May",
+	// 	"June",
+	// 	"July",
+	// 	"August",
+	// 	"September",
+	// 	"Oktober",
+	// 	"November",
+	// 	"December",
+	// }
 
-	birthSplit := strings.Split(b, "-")
-	day := birthSplit[0]
-	month := birthSplit[1]
-	year := birthSplit[2][2:]
-
-	mn := slices.Index(months, month) + 1
-	month = "0" + strconv.Itoa(mn)
+	year := strings.Split(b, "-")[0][2:]
+	month := strings.Split(b, "-")[1]
+	day := strings.Split(b, "-")[2]
 
 	return day + month + year
 }
 
 func IsNIPValid(nip, birthday string) bool {
 	parsedDate := parseBDay(birthday)
+	log.Println(parsedDate)
 	return strings.Contains(nip, parsedDate)
 }
 
@@ -102,9 +101,7 @@ func SubmissionErrorMsg(err string) string {
 	return err
 }
 
-// A cost of 12-14 is commonly recommended for production.
 func HashPassword(password string) (string, error) {
-	// Convert password to byte slice
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14) // Use cost 14 for strong security
 	if err != nil {
 		return "", err
@@ -112,9 +109,7 @@ func HashPassword(password string) (string, error) {
 	return string(bytes), nil
 }
 
-// CheckPasswordHash verifies if the given password matches the stored hash.
 func CheckPasswordHash(password, hash string) bool {
-	// Compare the hash with the password
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
 }

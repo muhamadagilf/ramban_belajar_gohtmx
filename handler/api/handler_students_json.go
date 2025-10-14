@@ -2,6 +2,7 @@ package api
 
 import (
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -58,7 +59,7 @@ func (config *apiConfig) HandlerGetStudentByID(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, Data{"error": err.Error()})
 	}
 
-	id, err := uuid.Parse(param.ID)	
+	id, err := uuid.Parse(param.ID)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, Data{"error": err.Error()})
 	}
@@ -94,9 +95,8 @@ func (config *apiConfig) HandlerCreateStudent(c echo.Context) error {
 			return fmt.Errorf("here daddy 67, %v", err.Error())
 		}
 
-		log.Println(reqBody.DateOfBirth)
 		if !handler.IsNIPValid(reqBody.Nip, reqBody.DateOfBirth) {
-			return fmt.Errorf("here daddy 69, %v", ERROR_INVALID_NIP)
+			return errors.New(handler.ERROR_INVALID_NIP)
 		}
 
 		studentBirthDate, err := time.Parse(handler.DOBLayout, reqBody.DateOfBirth)
