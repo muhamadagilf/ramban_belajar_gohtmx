@@ -217,6 +217,32 @@ func (q *Queries) GetStudentByNameOrNim(ctx context.Context, arg GetStudentByNam
 	return items, nil
 }
 
+const getStudentByUserId = `-- name: GetStudentByUserId :one
+SELECT id, created_at, updated_at, nip, name, email, year, room_id, study_plan_id, phone_number, nim, date_of_birth, user_id FROM students
+WHERE user_Id = $1
+`
+
+func (q *Queries) GetStudentByUserId(ctx context.Context, userID uuid.UUID) (Student, error) {
+	row := q.db.QueryRowContext(ctx, getStudentByUserId, userID)
+	var i Student
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Nip,
+		&i.Name,
+		&i.Email,
+		&i.Year,
+		&i.RoomID,
+		&i.StudyPlanID,
+		&i.PhoneNumber,
+		&i.Nim,
+		&i.DateOfBirth,
+		&i.UserID,
+	)
+	return i, err
+}
+
 const getStudentsByRoomAndMajor = `-- name: GetStudentsByRoomAndMajor :many
 SELECT s.id, s.created_at, s.updated_at, s.name, s.email, s.nim, 
 s.phone_number, r.name as room, std.major 

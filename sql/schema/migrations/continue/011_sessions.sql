@@ -1,0 +1,13 @@
+-- +goose Up
+CREATE TABLE sessions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_activity TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    session_id VARCHAR(255) UNIQUE NOT NULL,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    is_revoked BOOLEAN NOT NULL DEFAULT FALSE,
+    expire_at TIMESTAMP NOT NULL
+);
+
+-- +goose Down
+DROP TABLE sessions;

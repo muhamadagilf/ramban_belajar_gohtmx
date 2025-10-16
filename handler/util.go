@@ -19,7 +19,8 @@ const (
 	USER_ROLE_TEACHER = "teacher"
 
 	// error message
-	ERROR_USER_UNAUTHENTICATED     = "You're UnAuthenticated User, Cannot Access !!!"
+	ERROR_USER_UNAUTHENTICATED     = " You're Not Authenticated, Cannot Access !!!"
+	ERROR_FAILED_AUTHENTICATION    = " Authentication Failed, input the valid email & password"
 	ERROR_INVALID_NIP              = "error: invalid nomer induk pengguna (nip), please check your birthdate/nip"
 	ERROR_INVALID_CONFIRM_PASSWORD = "error: your confirmation password is invalid"
 )
@@ -83,22 +84,34 @@ func IsNIPValid(nip, birthday string) bool {
 	return strings.Contains(nip, parsedDate)
 }
 
-func SubmissionErrorMsg(err string) string {
-	err = strings.ToLower(err)
-	if strings.Contains(err, `violates check constraint "students_phone_number_check"`) {
-		return "error: invalid phone number, please input the correct number"
-	}
-	if strings.Contains(err, `violates unique constraint "students_phone_number_key"`) {
-		return "error: cannot input phone number, number already exists"
-	}
-	if strings.Contains(err, `violates unique constraint "students_email_key"`) {
-		return "error: cannot input email, email already exists"
-	}
-	if strings.Contains(err, `violates unique constraint "students_nip_key"`) {
-		return "error: cannot input NIP, NIP already exists"
+func ValidationErrorMsg(errMsg string) string {
+	errMsg = strings.ToLower(errMsg)
+
+	if strings.Contains(errMsg, `name_constraints`) {
+		return "error: invalid name, violates name_constraints"
 	}
 
-	return err
+	if strings.Contains(errMsg, `nip_constraints`) {
+		return "error: invalid nomer induk pengguna, violates nip_constraints"
+	}
+
+	if strings.Contains(errMsg, `phone_constraints`) {
+		return "error: invalid phone number, please input the valid number"
+	}
+
+	if strings.Contains(errMsg, `email_constraints`) {
+		return "error: invalid email address, please input the valid address"
+	}
+
+	if strings.Contains(errMsg, `dob_constraints`) {
+		return "error: wrong format date of birth, please input the right format"
+	}
+
+	if strings.Contains(errMsg, `password_constraints`) {
+		return ERROR_FAILED_AUTHENTICATION
+	}
+
+	return errMsg
 }
 
 func HashPassword(password string) (string, error) {

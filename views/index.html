@@ -5,38 +5,39 @@
     {{ template "head" . }}
     <title>RambanBelajar</title>
       <body class="bg-[whitesmoke]">
+      {{ template "loader" . }}
             <div
                   id="wrapper-content"
                   class="flex gap-[1rem]"      
             >
                   <div 
                         id="left-section-sidebar"
-                        class="w-[20%] h-screen p-[2rem] flex flex-col items-center
+                        class="w-[20%] h-screen p-[2rem] flex flex-col items-center justify-between
                         border border-gray-300 shadow-sm bg-[#fff]"
                   >
                         <div class="logo flex gap-[.8rem]
                         text-[1.3rem] items-center">
-                              <i class="fa-solid fa-graduation-cap"></i>
-                              <span class="font-semibold">RambanBelajar</span>
+                            <i class="fa-solid fa-graduation-cap"></i>
+                            <span class="font-semibold">RambanBelajar</span>
                         </div>
+                        <form hx-POST="/logout" hx-indicator="#loader-indicator"
+                              class="font-semibold text-[.7rem]">
+                            <button
+                                type="submit"
+                                class="flex gap-[.8rem] items-center
+                                px-[.8rem] py-[.5rem] bg-gray-300 rounded cursor-pointer">
+                                <i class="fa-solid fa-person-running"></i>
+                                GetOut
+                            </button>
+                        </form>
                   </div>
                   <div id="right-section-content"
                         class="w-[80%] flex justify-center mt-[1.5rem]">
                         <div class="top-section">
-                              <div class="api-nav flex gap-[1rem] items-center
-                              [&>a]:gap-[.8rem] [&>a]:bg-[#fff] [&>a]:border [&>a]:border-gray-300 [&>a]:shadow-sm
-                              [&>a]:rounded-md [&>a]:px-[1rem] [&>a]:py-[.8rem] [&>a]:font-semibold
-                              [&>a]:items-center [&_i]:p-[.6rem] [&_i]:rounded-full [&_i]:bg-black
-                              [&_i]:text-[white] [&_i]:text-center">
-                                    <a href="/students" class="flex items-center">
-                                         <i class="fa-solid fa-users-rectangle"></i>
-                                         <span>students</span> 
-                                    </a>
-                                    <a href="/students/submission" class="flex items-center">
-                                          <i class="fa-solid fa-user-plus"></i>
-                                          <span>students/submission</span>
-                                    </a>
-                              </div>
+                            <p class="mt-[1rem] bg-green-300 border-[2px] border-green-600
+                                px-[3rem] py-[1rem] rounded-sm text-[.8rem] text-green-800">
+                                Welcome <span class="font-bold">{{ .Name }}.</span> Youre Presence is Expected by Greatness
+                            </p>
                         </div>
                   </div>
             </div>

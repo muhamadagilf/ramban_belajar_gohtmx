@@ -33,6 +33,16 @@ type Room struct {
 	Name      string
 }
 
+type Session struct {
+	ID           uuid.UUID
+	CreatedAt    time.Time
+	LastActivity time.Time
+	SessionID    string
+	UserID       uuid.UUID
+	IsRevoked    bool
+	ExpireAt     time.Time
+}
+
 type Student struct {
 	ID          uuid.UUID
 	CreatedAt   time.Time

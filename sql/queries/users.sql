@@ -7,6 +7,6 @@ RETURNING *;
 SELECT * FROM users
 WHERE id = $1;
 
--- name: GetUserHash :one
-SELECT password_hash FROM users
+-- name: GetUserByEmail :one
+SELECT * FROM users
 WHERE email = $1;

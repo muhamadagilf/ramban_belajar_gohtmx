@@ -70,7 +70,6 @@ func (config *apiConfig) HandlerGetStudentByID(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, studentJSONFormat(student))
-
 }
 
 func (config *apiConfig) HandlerCreateStudent(c echo.Context) error {
@@ -95,19 +94,20 @@ func (config *apiConfig) HandlerCreateStudent(c echo.Context) error {
 			return fmt.Errorf("here daddy 67, %v", err.Error())
 		}
 
-		if !handler.IsNIPValid(reqBody.Nip, reqBody.DateOfBirth) {
-			return errors.New(handler.ERROR_INVALID_NIP)
-		}
-
 		studentBirthDate, err := time.Parse(handler.DOBLayout, reqBody.DateOfBirth)
 		if err != nil {
 			return fmt.Errorf("here daddy 74, %v", err)
 		}
 
+		birthDateStr := fmt.Sprintf("%v", studentBirthDate.Format(time.DateOnly))
+
+		if !handler.IsNIPValid(reqBody.Nip, birthDateStr) {
+			return errors.New(handler.ERROR_INVALID_NIP)
+		}
+
 		// if free nim exists, get the smallest nim for the new created student
 		// and delete the record points to that free nim
 		nim, err := qtx.GetFreelistNim(ctx)
-
 		// checks if there is no free nim to be used
 		// simply generate from the student-nim
 		if err != nil {
@@ -156,13 +156,11 @@ func (config *apiConfig) HandlerCreateStudent(c echo.Context) error {
 
 		return nil
 	})
-
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, Data{"error": err.Error()})
 	}
 
 	return c.JSON(http.StatusCreated, Data{"status": "succeed, Student Created"})
-
 }
 
 func (config *apiConfig) HandlerDeleteStudent(c echo.Context) error {
@@ -210,11 +208,9 @@ func (config *apiConfig) HandlerDeleteStudent(c echo.Context) error {
 
 		return nil
 	})
-
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, Data{"error": err.Error()})
 	}
 
 	return c.JSON(http.StatusOK, Data{"succeed": "student get deleted"})
-
 }

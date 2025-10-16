@@ -30,7 +30,6 @@ func newTemplate() *Templates {
 
 // example
 func main() {
-
 	godotenv.Load(".env")
 
 	portStr := os.Getenv("port")
@@ -56,15 +55,20 @@ func main() {
 	e.GET("/login", webCfg.GetLoginPage)
 	e.POST("/login", webCfg.LetUserLogin, utils.LoginLimiter)
 
-	e.GET("/", webCfg.GetHomePage)
-	e.GET("/students", webCfg.GetStudentsPage)
+	e.POST("/logout", webCfg.LetUserLogout, webCfg.MiddlewareAuth)
+
 	e.GET("/students/submission", webCfg.GetStudentSubmitPage)
 	e.POST("/students/submission", webCfg.CreateStudent, webCfg.MiddlewareStudent)
-	e.GET("/students/:id/profile", webCfg.GetStudentProfile)
-	e.GET("/students/:id/profile/update", webCfg.GetUpdateStudentPage)
-	e.PUT("/students/:id/profile/update", webCfg.UpdateStudent)
+
+	homeRouter := e.Group("", webCfg.MiddlewareAuth)
+	homeRouter.GET("/", webCfg.GetHomePage)
+	homeRouter.GET("/students/:id/profile", webCfg.GetStudentProfile)
+	homeRouter.GET("/students/:id/profile/update", webCfg.GetUpdateStudentPage)
+	homeRouter.PUT("/students/:id/profile/update", webCfg.UpdateStudent)
+
+	// NOTE: admin level
+	e.GET("/students", webCfg.GetStudentsPage)
 	e.DELETE("/students/:id/profile", webCfg.DeleteStudent)
 
 	e.Logger.Fatal(e.Start(":" + portStr))
-
 }

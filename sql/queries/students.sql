@@ -24,6 +24,10 @@ ORDER BY updated_at DESC;
 SELECT * FROM students
 WHERE id = $1;
 
+-- name: GetStudentByUserId :one
+SELECT * FROM students
+WHERE user_Id = $1;
+
 -- name: DeleteStudentById :one
 DELETE FROM students
 WHERE id = $1

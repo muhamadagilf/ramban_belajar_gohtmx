@@ -33,8 +33,8 @@ func (config *webConfig) CreateStudent(c echo.Context) error {
 		PhoneNumber     string `validate:"phone_constraints"`
 		Nip             string `validate:"nip_constraints"`
 		DateOfBirth     string `validate:"cheeky_sql_inject"`
-		Password        string
-		ConfirmPassword string
+		Password        string `validate:"password_constraints"`
+		ConfirmPassword string `validate:"password_constraints"`
 	}
 
 	err := handler.WithTX(ctx, config.Server.DB, config.Server.Queries, func(qtx *database.Queries) error {
@@ -136,11 +136,11 @@ func (config *webConfig) CreateStudent(c echo.Context) error {
 	if err != nil {
 		c.Render(http.StatusUnprocessableEntity, "student-submission", Data{})
 		return c.Render(http.StatusUnprocessableEntity, "error-message", Data{
-			"Message": handler.SubmissionErrorMsg(err.Error()),
+			"Message": handler.ValidationErrorMsg(err.Error()),
 		})
 	}
 
-	c.Response().Header().Set("HX-Redirect", "/students")
+	c.Response().Header().Set("HX-Redirect", "/login")
 	return c.NoContent(http.StatusCreated)
 }
 
@@ -222,7 +222,7 @@ func (config *webConfig) DeleteStudent(c echo.Context) error {
 	}
 
 	c.Response().Header().Set("HX-Redirect", "/students")
-	return c.Render(http.StatusSeeOther, "completion-message", Data{"Message": "Deletion Complete"})
+	return c.NoContent(http.StatusOK)
 }
 
 func (config *webConfig) GetStudentProfile(c echo.Context) error {
@@ -321,11 +321,11 @@ func (config *webConfig) UpdateStudent(c echo.Context) error {
 	if err != nil {
 		c.Render(http.StatusUnprocessableEntity, "update-student", Data{})
 		return c.Render(http.StatusUnprocessableEntity, "error-message", Data{
-			"Message": handler.SubmissionErrorMsg(err.Error()),
+			"Message": handler.ValidationErrorMsg(err.Error()),
 		})
 	}
 
-	redirectURL := fmt.Sprintf("/student/profile/%v", idStr)
+	redirectURL := "/student/profile/%v" + idStr
 	c.Response().Header().Set("HX-Redirect", redirectURL)
 	return c.NoContent(http.StatusOK)
 }
