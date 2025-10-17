@@ -22,6 +22,7 @@
                   <h2 class="font-semibold">/student/update</h2>
                   <form hx-PUT="/students/{{ .Student.ID }}/profile/update" hx-indicator="#loader-indicator"
                   class="update-student h-[inherit] flex flex-col gap-y-[.8rem]">
+                        <input type="hidden" name="csrf" value="{{ .CSRF_Token }}">
                         <div class="input-section flex gap-x-[1rem] [&>div]:h-fit">
                               <div class="email-section flex flex-col w-[50%] pt-[.3rem] pb-[.5rem] px-[.8rem]
                                     rounded-md shadow-md border border-gray-400 ">

@@ -26,6 +26,7 @@
             border border-gray-400 shadow-sm rounded-sm
             "
           >
+            <input type="hidden" name="_csrf" value="{{ .CSRF_Token }}">
             <div
               class="wrapper-inpt flex flex-col gap-[.5rem]
               border border-gray-400 rounded pt-[.5rem] pl-[.6rem] pb-[.4rem]

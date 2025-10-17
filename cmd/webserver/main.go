@@ -52,19 +52,27 @@ func main() {
 	e.Renderer = newTemplate()
 	e.Static("/static", "static")
 
-	e.GET("/login", webCfg.GetLoginPage)
-	e.POST("/login", webCfg.LetUserLogin, utils.LoginLimiter)
+	eV1 := e.Group("")
+	eV1.Use(webCfg.MiddlewareAuth)
+	eV1.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
+		TokenLength:    32,
+		TokenLookup:    "header:X-CSRF-TOKEN,form:_csrf",
+		ContextKey:     "csrf",
+		CookieName:     "_csrf",
+		CookieMaxAge:   86400,
+		CookieHTTPOnly: true,
+	}))
 
-	e.POST("/logout", webCfg.LetUserLogout, webCfg.MiddlewareAuth)
+	eV1.GET("/login", webCfg.GetLoginPage)
+	eV1.POST("/login", webCfg.LetUserLogin, utils.LoginLimiter)
+	eV1.POST("/logout", webCfg.LetUserLogout)
+	eV1.GET("/students/submission", webCfg.GetStudentSubmitPage)
+	eV1.POST("/students/submission", webCfg.CreateStudent, webCfg.MiddlewareStudent)
 
-	e.GET("/students/submission", webCfg.GetStudentSubmitPage)
-	e.POST("/students/submission", webCfg.CreateStudent, webCfg.MiddlewareStudent)
-
-	homeRouter := e.Group("", webCfg.MiddlewareAuth)
-	homeRouter.GET("/", webCfg.GetHomePage)
-	homeRouter.GET("/students/:id/profile", webCfg.GetStudentProfile)
-	homeRouter.GET("/students/:id/profile/update", webCfg.GetUpdateStudentPage)
-	homeRouter.PUT("/students/:id/profile/update", webCfg.UpdateStudent)
+	eV1.GET("/", webCfg.GetHomePage)
+	eV1.GET("/students/:id/profile", webCfg.GetStudentProfile)
+	eV1.GET("/students/:id/profile/update", webCfg.GetUpdateStudentPage)
+	eV1.PUT("/students/:id/profile/update", webCfg.UpdateStudent)
 
 	// NOTE: admin level
 	e.GET("/students", webCfg.GetStudentsPage)

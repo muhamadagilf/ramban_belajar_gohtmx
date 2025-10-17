@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/gorilla/sessions"
 	"github.com/labstack/echo/v4"
 	"github.com/muhamadagilf/rambanbelajar_gohtmx/handler"
 	"github.com/muhamadagilf/rambanbelajar_gohtmx/internal/database"
@@ -17,6 +16,7 @@ func (config *webConfig) GetHomePage(c echo.Context) error {
 	ctx := c.Request().Context()
 	query := config.Server.Queries
 	userID := c.Get("user_id").(uuid.UUID)
+	CSRFToken := c.Get("csrf").(string)
 
 	user, err := query.GetUserById(ctx, userID)
 	if err != nil {
@@ -38,16 +38,18 @@ func (config *webConfig) GetHomePage(c echo.Context) error {
 		userDat = "Role: Teacher, comin soon"
 	}
 
-	return c.Render(http.StatusOK, "index", userDat)
+	return c.Render(http.StatusOK, "index", Data{
+		"User":       userDat,
+		"CSRF_Token": CSRFToken,
+	})
 }
 
 func (config *webConfig) GetLoginPage(c echo.Context) error {
-	log.Printf("\n\nLOGINPAGE\n%v\n\n", c.Request().Header.Get("Set-Cookie"))
-	return c.Render(http.StatusOK, "login", Data{})
+	CSRFToken := c.Get("csrf").(string)
+	return c.Render(http.StatusOK, "login", Data{"CSRF_Token": CSRFToken})
 }
 
 func (config *webConfig) LetUserLogin(c echo.Context) error {
-	time.Sleep(300 * time.Millisecond)
 	ctx := c.Request().Context()
 	query := config.Server.Queries
 	type formParams struct {
@@ -83,7 +85,11 @@ func (config *webConfig) LetUserLogin(c echo.Context) error {
 
 	// NOTE: session creation
 	sessionID := fmt.Sprintf("sess_id_%v_%v", user.ID, time.Now().Unix())
-	session := sessions.NewSession(config.store, config.sessionName)
+	session, err := config.store.Get(c.Request(), config.sessionName)
+	if err != nil {
+		log.Println("hit 94, baby", err)
+	}
+
 	session.Values["session_id"] = sessionID
 
 	_, err = query.CreateUserSession(ctx, database.CreateUserSessionParams{
@@ -104,7 +110,8 @@ func (config *webConfig) LetUserLogin(c echo.Context) error {
 		})
 	}
 
-	log.Printf("\n\nLOGIN\n%v\n\n", c.Response().Header())
+	log.Printf("\n\nLogin\n%v\n\n", c.Request().Header.Get("Cookie"))
+	log.Printf("\n\nLoginResponse\n%v\n\n", c.Response().Header().Get("Set-Cookie"))
 
 	c.Response().Header().Set("HX-Redirect", "/")
 	return c.NoContent(http.StatusOK)
@@ -128,13 +135,10 @@ func (config *webConfig) LetUserLogout(c echo.Context) error {
 
 	// NOTE: cleans up the cooke, -1 to delete the cookie
 	// so the browser dont have the user cookie anymore
-	// session.Values = make(map[any]any)
 	session.Options.MaxAge = -1
 	if err := session.Save(c.Request(), c.Response()); err != nil {
 		return c.String(http.StatusInternalServerError, "Internal Server Error")
 	}
-
-	log.Printf("\n\nLOGOUT\n%v\n\n", c.Response().Header())
 
 	c.Response().Header().Set("HX-Redirect", "/login")
 	return c.NoContent(http.StatusOK)

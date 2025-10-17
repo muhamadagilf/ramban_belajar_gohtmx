@@ -16,11 +16,11 @@ import (
 	"github.com/muhamadagilf/rambanbelajar_gohtmx/internal/database"
 )
 
-type Data map[string]any
-
 func (config *webConfig) GetStudentSubmitPage(c echo.Context) error {
+	CSRFToken := c.Get("csrf").(string)
 	return c.Render(http.StatusOK, "student-submission", Data{
-		"Major": MAJOR,
+		"Major":      MAJOR,
+		"CSRF_Token": CSRFToken,
 	})
 }
 
@@ -226,26 +226,23 @@ func (config *webConfig) DeleteStudent(c echo.Context) error {
 }
 
 func (config *webConfig) GetStudentProfile(c echo.Context) error {
-	// retrieve all necessary data
-	idStr := c.Param("id")
-	id, err := uuid.Parse(idStr)
+	ctx := c.Request().Context()
+	query := config.Server.Queries
+	userID := c.Get("user_id").(uuid.UUID)
+
+	student, err := query.GetStudentByUserId(ctx, userID)
 	if err != nil {
-		return c.String(http.StatusBadRequest, err.Error())
+		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
-	student, err := config.Server.Queries.GetStudentById(c.Request().Context(), id)
+	plan, err := query.GetStudyPlanById(ctx, student.StudyPlanID)
 	if err != nil {
-		return c.String(http.StatusBadRequest, err.Error())
+		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
-	plan, err := config.Server.Queries.GetStudyPlanById(c.Request().Context(), student.StudyPlanID)
+	room, err := query.GetStudentRoomById(ctx, student.RoomID)
 	if err != nil {
-		return c.String(http.StatusBadRequest, err.Error())
-	}
-
-	room, err := config.Server.Queries.GetStudentRoomById(c.Request().Context(), student.RoomID)
-	if err != nil {
-		return c.String(http.StatusBadRequest, err.Error())
+		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
 	// validation based caching
@@ -261,39 +258,46 @@ func (config *webConfig) GetStudentProfile(c echo.Context) error {
 	c.Response().Header().Set("Last-Modified", lastModified.UTC().Format(http.TimeFormat))
 	c.Response().Header().Set("Cache-Control", "no-cache")
 
-	return c.Render(http.StatusOK, "student-profile", Data{"Student": student, "Plan": plan, "Room": room})
+	return c.Render(http.StatusOK, "student-profile", Data{
+		"Student": student,
+		"Plan":    plan,
+		"Room":    room,
+	})
 }
 
 func (config *webConfig) GetUpdateStudentPage(c echo.Context) error {
-	idStr := c.Param("id")
-	id, err := uuid.Parse(idStr)
+	ctx := c.Request().Context()
+	query := config.Server.Queries
+	userID := c.Get("user_id").(uuid.UUID)
+	CRSFToken := c.Get("csrf").(string)
+
+	student, err := query.GetStudentByUserId(ctx, userID)
 	if err != nil {
-		return c.String(http.StatusBadRequest, err.Error())
+		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
-	student, err := config.Server.Queries.GetStudentById(c.Request().Context(), id)
-	if err != nil {
-		return c.String(400, err.Error())
-	}
-
-	return c.Render(http.StatusOK, "update-student", Data{"Student": student})
+	return c.Render(http.StatusOK, "update-student", Data{
+		"Student":    student,
+		"CSRF_Token": CRSFToken,
+	})
 }
 
 func (config *webConfig) UpdateStudent(c echo.Context) error {
-	time.Sleep(300 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 	ctx := c.Request().Context()
+	query := config.Server.Queries
+	userID := c.Get("user_id").(uuid.UUID)
 	type formParams struct {
 		Email       string `validate:"email_constraints,cheeky_sql_inject"`
 		PhoneNumber string `validate:"phone_constraints,cheeky_sql_inject"`
 	}
 
-	idStr := c.Param("id")
-	id, err := uuid.Parse(idStr)
+	student, err := query.GetStudentByUserId(ctx, userID)
 	if err != nil {
-		return err
+		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
-	err = handler.WithTX(ctx, config.Server.DB, config.Server.Queries, func(qtx *database.Queries) error {
+	err = handler.WithTX(ctx, config.Server.DB, query, func(qtx *database.Queries) error {
 		params := formParams{
 			Email:       c.FormValue("email"),
 			PhoneNumber: c.FormValue("phone"),
@@ -304,7 +308,7 @@ func (config *webConfig) UpdateStudent(c echo.Context) error {
 		}
 
 		_, err = qtx.UpdateStudent(ctx, database.UpdateStudentParams{
-			ID:          id,
+			ID:          student.ID,
 			Email:       params.Email,
 			PhoneNumber: params.PhoneNumber,
 			UpdatedAt:   time.Now(),
@@ -325,7 +329,7 @@ func (config *webConfig) UpdateStudent(c echo.Context) error {
 		})
 	}
 
-	redirectURL := "/student/profile/%v" + idStr
+	redirectURL := fmt.Sprintf("/students/%v/profile", student.ID)
 	c.Response().Header().Set("HX-Redirect", redirectURL)
 	return c.NoContent(http.StatusOK)
 }

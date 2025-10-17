@@ -20,6 +20,8 @@ var (
 	YEAR  = time.Now().Year()
 )
 
+type Data = map[string]any
+
 type webConfig struct {
 	Server      *server.Server
 	sessionName string
@@ -91,15 +93,18 @@ func NewWebConfig() (*webConfig, error) {
 	}
 
 	store := sessions.NewCookieStore([]byte(sessionKey))
-	store.Options.Domain = "/"
-	store.Options.HttpOnly = true
-	store.Options.Secure = false
-	store.Options.SameSite = http.SameSiteStrictMode
-	store.Options.MaxAge = 3600 * 24
+
+	store.Options = &sessions.Options{
+		Domain:   "/",
+		HttpOnly: true,
+		Secure:   false,
+		SameSite: http.SameSiteStrictMode,
+		MaxAge:   86400,
+	}
 
 	return &webConfig{
 		Server:      server,
-		sessionName: "session_id",
+		sessionName: "web_session",
 		store:       store,
 	}, nil
 }
