@@ -49,6 +49,16 @@ func (q *Queries) CreateUserSession(ctx context.Context, arg CreateUserSessionPa
 	return i, err
 }
 
+const deleteSessionByID = `-- name: DeleteSessionByID :exec
+DELETE FROM sessions
+WHERE id = $1
+`
+
+func (q *Queries) DeleteSessionByID(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteSessionByID, id)
+	return err
+}
+
 const deleteUserSession = `-- name: DeleteUserSession :exec
 DELETE FROM sessions
 WHERE session_id = $1
@@ -57,6 +67,38 @@ WHERE session_id = $1
 func (q *Queries) DeleteUserSession(ctx context.Context, sessionID string) error {
 	_, err := q.db.ExecContext(ctx, deleteUserSession, sessionID)
 	return err
+}
+
+const getSessionIDAll = `-- name: GetSessionIDAll :many
+SELECT id, last_activity FROM sessions
+`
+
+type GetSessionIDAllRow struct {
+	ID           uuid.UUID
+	LastActivity time.Time
+}
+
+func (q *Queries) GetSessionIDAll(ctx context.Context) ([]GetSessionIDAllRow, error) {
+	rows, err := q.db.QueryContext(ctx, getSessionIDAll)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetSessionIDAllRow
+	for rows.Next() {
+		var i GetSessionIDAllRow
+		if err := rows.Scan(&i.ID, &i.LastActivity); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getUserSession = `-- name: GetUserSession :one

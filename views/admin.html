@@ -1,0 +1,83 @@
+{{ block "admin-panel" . }}
+    {{ template "head" . }}
+    <title>Admin Panel</title>
+    <body>
+        {{ template "loader" . }}
+        <div id="wrapper-content" class="flex gap-[2rem]">
+            {{ template "admin-left-section" . }}
+            <div class="right-section w-[75%] py-[3rem] flex flex-col">
+                <div id="right-card-content">
+                </div>
+            </div>
+        </div>
+    </body>
+{{ end }}
+
+{{ block "db-tables-nav" . }}
+<div
+    class="flex flex-col gap-[.5rem] border-b-2 border-t-2 border-gray-100 py-[1rem]
+    [&>a]:flex [&>a]:items-center [&>a]:gap-[1rem] [&>a]:pl-[1rem] 
+    [&>a]:rounded-sm [&>a]:cursor-pointer [&>a]:py-[.6rem] [&>a]:hover:bg-blue-600
+    [&>a]:hover:text-[white] [&>a]:transition">
+    <a href="/admin/panel/users">
+        <i class="fa-solid fa-user"></i>
+        <span>Users</span>
+    </a>
+    <a href="/admin/panel/students">
+        <i class="fa-solid fa-user-graduate"></i>
+        <span>Students</span>
+    </a>
+</div>
+{{ end }}
+
+{{ block "admin-left-section" . }}
+<div class="left-section flex flex-col w-[20%] h-screen shadow-md border border-gray-400
+      gap-[4rem] px-[2rem] py-[3rem]">
+
+    <div class="flex flex-col gap-[.2rem] pl-[1rem]">
+        <p class="flex gap-[.5rem] text-[1.2rem] items-center">
+            <i class="fa-solid fa-user-graduate"></i>
+            <span class="font-bold">RambanBelajar</span>
+        </p>
+        <p>
+            Admin Panel
+        </p>
+    </div>
+
+    <a href="/admin/panel"
+        class="flex items-center gap-[1rem] pl-[1rem] rounded-sm cursor-pinter py-[.6rem]
+        hover:text-white hover:bg-blue-600 transition">
+        <i class="fa-solid fa-home"></i>
+        <span>Home</span>
+    </a>
+
+    <div class="flex flex-col gap-[.5rem] border-b-2 border-t-2 border-gray-100 py-[1rem]
+        [&>a]:flex [&>a]:items-center [&>a]:gap-[1rem] [&>a]:pl-[1rem] 
+        [&>a]:rounded-sm [&>a]:cursor-pointer [&>a]:py-[.6rem] [&>a]:hover:bg-blue-600
+        [&>a]:hover:text-[white] [&>a]:transition">
+        <a href="/admin/panel/users">
+            <i class="fa-solid fa-user"></i>
+            <span>Users</span>
+        </a>
+        <a href="/admin/panel/students">
+            <i class="fa-solid fa-user-graduate"></i>
+            <span>Students</span>
+        </a>
+    </div>
+
+    <div class="flex flex-col gap-[1rem] mt-[auto]">
+        <form hx-POST="/admin/logout" hx-indicator="#loader-indicator">
+          <input type="hidden" name="_csrf" value="{{ .CSRF_Token }}">
+          <button
+              type="submit"
+              class="flex items-center gap-[1rem] w-[100%] pl-[1rem] py-[.6rem] rounded-sm
+              hover:bg-blue-600 hover:text-white transition cursor-pointer">
+              <i class="fa-solid fa-person-through-window"></i>
+              Logout
+          </button>
+        </form>
+    </div>
+
+</div>
+{{ end }}
+

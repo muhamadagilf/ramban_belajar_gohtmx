@@ -1,0 +1,14 @@
+{{ block "unauthorized" . }}
+<html>
+    {{ template "head" . }}
+    <title>Unauthorized Warning</title>
+    <body class="flex flex-col gap-[1rem] justify-center items-center">
+        <div class="w-[50%] flex justify-center py-[1rem] mt-[2rem] border border-gray-400 shadow-sm">
+            You're Not Authenticated, Cannot Access !!!
+        </div>
+        <button onclick="window.history.back(); return false">
+            Back to previous page
+        </button>
+    </body>
+</html>
+{{ end }}

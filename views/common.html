@@ -1,0 +1,128 @@
+{{ block "head" . }}
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/static/css/loader.css" />
+  <script
+    src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js"
+    integrity="sha384-/TgkGk7p307TH7EXJDuUlgG3Ce1UVolAOFopFekQkkXihi5u/6OCvVKyz1W+idaz"
+    crossorigin="anonymous"
+  ></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/htmx-ext-response-targets@2.0.4"
+    integrity="sha384-T41oglUPvXLGBVyRdZsVRxNWnOOqCynaPubjUVjxhsjFTKrFJGEMm3/0KGmNQ+Pg"
+    crossorigin="anonymous"
+  ></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script
+    src="https://kit.fontawesome.com/128ce8a98d.js"
+    crossorigin="anonymous"
+  ></script>
+  <script src="/static/script/interacts.js"></script>
+  <script src="/static/script/studsub.js"></script>
+</head>
+{{ end }}
+
+{{ block "loader" . }}
+<div id="loader-indicator" class="loader-indicator">
+  <section class="dots-container">
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+  </section>
+</div>
+{{ end }}
+
+{{ block "webpane-top" . }}
+<div
+  class="webpane-top flex items-center justify-between
+  px-[2rem] py-[1rem] h-[8%] border-b border-gray-400 shadow"
+>
+
+  <div class="logo flex items-center gap-[.8rem] text-[1.1rem]">
+      <i class="fa-solid fa-graduation-cap font-bold"></i>
+      <span class="font-bold">RambanBelajar</span>
+      {{ if eq .UserRole "admin" }}
+      <span class="text-[.8rem]">Admin Panel</span>
+      {{ end }}
+  </div>
+
+  <div class="support flex items-center gap-[1rem] text-[.7rem]">
+      <div class="info flex items-center gap-[.5rem]">
+          <i class="fa-solid fa-circle-info"></i>
+          <span>Info</span>
+      </div>
+      <div class="contact flex items-center gap-[.5rem]">
+          <i class="fa-solid fa-phone"></i>
+          <span>Contact</span>
+      </div>
+  </div>
+
+</div>
+{{ end }}
+
+{{ block "webpane-left" . }}
+<div
+  class="webpane-left w-[15%] px-[1rem] py-[1.5rem]
+  flex flex-col justify-between border-r border-gray-400 shadow"
+>
+
+  <div class="top-nav flex flex-col gap-[1rem] text-[.8rem]">
+      <a
+          {{ if ne .UserRole "admin" }}
+          href="/"
+          {{ else }}
+          href="/admin/panel"
+          {{ end }}
+
+          class="flex gap-[1rem] items-center rounded-sm
+          hover:bg-blue-600 hover:text-[white] py-[.6rem] pl-[1rem]">
+
+          <i class="fa-solid fa-home"></i>
+          <span>Home</span>
+      </a>
+
+      {{ if eq .UserRole "admin"  }}
+        {{ template "db-tables-nav" .  }}
+      {{ end }}
+
+  </div>
+
+  <div
+    class="bottom-nav flex flex-col gap-[1rem]
+    text-[.8rem] border-t border-gray-400 pt-[.8rem]"
+  >
+
+    {{ if ne .UserRole "admin" }}
+    <a
+        {{ if eq .UserRole "student" }}
+        href="/students/{{ .UserID }}/profile"
+        {{ else }}
+        href="/teachers/{{ .UserID }}/profile"
+        {{ end }}
+
+        class="flex gap-[1rem] items-center rounded-sm
+        hover:bg-blue-600 hover:text-[white] py-[.6rem] pl-[1rem]">
+
+        <i class="fa-solid fa-user"></i>
+        <span>Profile</span>
+    </a>
+    {{ end }}
+
+    <form hx-POST="/logout" hx-indicator="#loader-indicator">
+        <input type="hidden" name="_csrf" value="{{ .CSRF_Token }}">
+        <button
+            type="submit"
+            class="w-[100%] flex gap-[1rem] items-center cursor-pointer
+            rounded-sm pl-[1rem] transition
+            py-[.6rem] hover:bg-blue-600 hover:text-[white]">
+            <i class="fa-solid fa-person-running"></i>
+            GetOut
+        </button>
+    </form>
+
+  </div>
+</div>
+{{ end }}

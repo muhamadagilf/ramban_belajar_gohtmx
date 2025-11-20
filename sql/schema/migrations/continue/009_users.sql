@@ -4,8 +4,7 @@ CREATE TABLE users (
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       email VARCHAR(64) UNIQUE NOT NULL,
-      password_hash VARCHAR(64) NOT NULL,
-      role VARCHAR(64) NOT NULL
+      password_hash VARCHAR(64) NOT NULL
 );
 
 -- +goose Down

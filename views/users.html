@@ -1,0 +1,139 @@
+{{ block "db-users-panel" . }}
+<!DOCTYPE html>
+<html>
+  {{ template "head" . }}
+  <title>RambanBelajar</title>
+  <body hx-ext="response-targets" class="bg-[whitesmoke]">
+    {{ template "loader" . }}
+    <div class="wrapper flex flex-col h-screen">
+      {{ template "webpane-top" . }}
+      <div class="content h-[92%] flex gap-[1rem]">
+
+        {{ template "webpane-left" . }}
+
+        <div class="right-section w-[80%] py-[1.5rem] flex flex-col">
+          {{ template "user-card" . }}
+        </div>
+
+    </div>
+  </body>
+</html>
+{{ end }}
+
+{{ block "user-card" . }}
+<div
+  id="right-content-card"
+  class="flex flex-col gap-[1rem] opacity-0 transition-opacity duration-500 ease-out"
+>
+  <div
+    id="top-section"
+    class="wrapper-content flex flex-col gap-y-[1rem] h-[50vh] rounded shadow-sm border border-gray-400 py-[1.5rem] px-[2.5rem]"
+  >
+    <p class="font-semibold">/users</p>
+    <div class="user-data-section flex justify-between">
+      <div
+        class="left-section w-[83%] rounded border border-gray-400 shadow-sm overflow-hidden"
+      >
+        <table class="w-full text-sm rtl:text-right text-gray-800">
+          <thead
+            class="t[&_th]:px-6 [&_th]:py-3 text-xs text-gray-700 uppercase bg-gray-300"
+          >
+            <tr>
+              <th>ID</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Created_At</th>
+            </tr>
+          </thead>
+          {{ template "users-table-data" . }}
+        </table>
+      </div>
+
+      <div class="right-section w-[15%] flex flex-col gap-[1rem]">
+        <button
+          id="new-user-btn"
+          class="flex items-center justify-center gap-[.8rem] px-[1rem] py-[.5rem] text-[.8rem] border border-gray-400 rounded shadow-sm hover:bg-blue-600 hover:text-white cursor-pointer"
+        >
+          <i class="fa-solid fa-plus"></i>
+          <span class="font-semibold">New User</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div
+    id="bottom-section"
+    class="bottom-section border border-gray-400 rounded shadow-sm py-[1.5rem] px-[2.5rem] hidden"
+  >
+    <p class="font-semibold">/users/create</p>
+
+    <form
+      class="flex flex-col gap-[1rem]"
+      hx-disabled-elt="find button[type='submit']"
+      hx-post="/admin/panel/users/create"
+      hx-target-error="#error-message"
+      hx-indicator="#loader-indicator"
+    >
+      <input type="hidden" name="_csrf" value="{{ .CSRF_Token }}" />
+
+      <div class="flex gap-[2rem] items-center">
+        <div
+          class="flex flex-col gap-[1rem] [&>input]:pl-[1rem] [&>input]:py-[.7rem] w-[50%] [&>input]:outline-none"
+        >
+          <input
+            type="email"
+            name="email"
+            placeholder="Email Address"
+            class="rounded border border-gray-400"
+          />
+          <input
+            type="password"
+            name="password"
+            placeholder="Input Password"
+            class="rounded border border-gray-400"
+          />
+          <button
+            type="submit"
+            class="px-[1rem] py-[.5rem] hover:text-white border border-gray-400 rounded shadow-sm hover:bg-blue-600 cursor-pointer"
+          >
+            Create
+          </button>
+        </div>
+
+        <div
+          class="flex flex-col gap-[.8rem] border border-gray-400 shadow-sm rounded px-[1rem] py-[.8rem] [&>div]:flex [&>div]:gap-[.8rem] [&>div]:items-center [&>div]:py-[.3rem] [&>div]:px-[.5rem] [&>div]:hover:bg-gray-600 [&>div]:hover:text-white [&>div]:transition [&>div]:rounded [&>div]:cursor-pointer"
+        >
+          <span>Roles:</span>
+          <div>
+            <input type="checkbox" name="roles" value="admin" />
+            <label for="">Admin</label>
+          </div>
+          <div>
+            <input type="checkbox" name="roles" value="teacher" />
+            <label for="">Teacher</label>
+          </div>
+          <div>
+            <input type="checkbox" name="roles" value="superuser" />
+            <label for="">Superuser</label>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div id="error-message"></div>
+</div>
+{{ end }}
+
+{{ block "users-table-data" . }}
+<tbody class="[&_td]:px-6 [&_td]:py-3 bg-white border-b border-gray-200">
+  {{ range .Users }}
+  <tr>
+    <td>{{ .ID }}</td>
+    <td>{{ .Email }}</td>
+    <td>{{ .Role }}</td>
+    <td>{{ .CreatedAt }}</td>
+  </tr>
+  {{ end }}
+</tbody>
+{{ end }}

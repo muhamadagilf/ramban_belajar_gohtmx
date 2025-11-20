@@ -3,7 +3,6 @@
 <html>
       {{ template "head" . }}
       <title>Student Submission</title>
-      <script src="../static/script/studsub.js"></script>
       <body class="flex flex-col items-center h-screen gap-[2rem]">
             {{ template "loader" . }}
             <div class="logo mt-[4rem] flex flex-col items-center gap-[.6rem] text-[1.8rem]">
@@ -131,11 +130,21 @@
                                           type="password" name="confirm-password" id="confirm-password">
                                     </div>
                         </div>
+
                         <div class="btns flex flex-col">
-                              <button id="nextBtn" class="next-btn bg-blue-600 py-[.6rem] cursor-pointer
-                               uppercase text-[white] w-[100%] font-semibold rounded-sm">
-                                    Next
-                              </button>
+
+                              <div id="nextBtn" class="flex flex-col gap-[1rem]">
+                                  <button class="next-btn bg-blue-600 py-[.6rem] cursor-pointer
+                                  uppercase text-[white] w-[100%] font-semibold rounded-sm">
+                                        Next
+                                  </button>
+                                  <a
+                                      href="/admin/panel/students"
+                                      class="border border-gray-400 py-[.6rem] cursor-pointer
+                                      uppercase w-[100%] font-semibold rounded-sm text-center">
+                                      Back
+                                  </a>
+                              </div>
 
                               <div id="second-btns" class="hidden flex flex-col gap-[1rem]">
                                     <button type="submit" id="submitBtn"

@@ -1,7 +1,9 @@
 package web
 
 import (
+	"crypto/sha256"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -12,6 +14,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/muhamadagilf/rambanbelajar_gohtmx/internal/database"
 	"github.com/muhamadagilf/rambanbelajar_gohtmx/internal/server"
+	"github.com/muhamadagilf/rambanbelajar_gohtmx/utils"
 )
 
 var (
@@ -82,7 +85,7 @@ func studentsQueryParamHandler(c echo.Context, qtx *database.Queries) (Data, err
 }
 
 func NewWebConfig() (*webConfig, error) {
-	server, err := server.GetServerConfig()
+	serverCfg, err := server.GetServerConfig()
 	if err != nil {
 		return nil, err
 	}
@@ -93,9 +96,9 @@ func NewWebConfig() (*webConfig, error) {
 	}
 
 	store := sessions.NewCookieStore([]byte(sessionKey))
-
 	store.Options = &sessions.Options{
-		Domain:   "/",
+		Domain:   "",
+		Path:     "/",
 		HttpOnly: true,
 		Secure:   false,
 		SameSite: http.SameSiteStrictMode,
@@ -103,8 +106,17 @@ func NewWebConfig() (*webConfig, error) {
 	}
 
 	return &webConfig{
-		Server:      server,
+		Server:      serverCfg,
 		sessionName: "web_session",
 		store:       store,
 	}, nil
+}
+
+func IsCacheValid(c echo.Context, lastModified time.Time) (bool, string) {
+	ETag := fmt.Sprintf("%x", sha256.Sum256([]byte(lastModified.Format(time.RFC3339))))
+	modifiedSince := c.Request().Header.Get("If-Modified-Since")
+	if c.Request().Header.Get("If-None-Match") == ETag || utils.IsLastModifiedValid(modifiedSince, lastModified) {
+		return true, ETag
+	}
+	return false, ""
 }

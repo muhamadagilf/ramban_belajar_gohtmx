@@ -1,89 +1,110 @@
-{{ block "students" . }}
+{{ block "db-students-panel" . }}
 <!DOCTYPE html>
 <html>
   {{ template "head" . }}
-  <title>Students</title>
-      <body class="flex justify-center items-center h-screen bg-[whitesmoke]">
-      {{ template "loader" . }}
-            <div
-                  id="wrapper-content"
-                  class="wrapper-content w-[90%] h-[80%] flex flex-col gap-y-[1rem]
-                  rounded shadow-lg bg-[#ffffff] py-[1.5rem] px-[2.5rem]"
-            >
-                   <a href="/"
-                              class="back-refresh flex gap-x-[.5rem] shadow-sm border border-gray-300
-                              text-[.7rem] w-fit rounded cursor-pointer items-center px-[.8rem] py-[.3rem] font-semibold
-                              hover:bg-[#0000003a] transition"
-                  >
-                              <i class="fa-solid fa-arrow-left"></i>
-                              <span>Back</span>
-                        </a>
-                  <h2 class="font-semibold mt-[1rem]">/students</h2>
-                  <div class="wrapper-students-content h-[100%] mt-[.8rem] flex justify-between">
-                        <div class="right-section flex flex-col w-[75%] gap-[1.2rem]">
-                              <form action="/students" method="get"
-                              class="search-form text-[.8rem] flex justify-between p-[.4rem]
-                              border border-gray-400 shadow-sm rounded-sm">
-                                    <input type="text" class="search-inpt w-[100%] outline-none pl-[1rem]" id="search"
-                                          name="search" placeholder="search student by name or nim">
-                                    <button type="submit" class="border border-gray-400 rounded-sm shadow-md
-                                    text-[.8rem] p-[.35rem] px-[1rem] font-semibold cursor-pointer bg-blue-600 text-white"
-                                    >Search</button>
-                              </form>
-                              {{ template "students-content" . }}
-                        </div>
-                        <div class="right-section w-[20%]">
-                              <div class="filter-section ">
-                                    <p class="font-semibold">Filter Students</p>
-                                    <form action="/students" method="get" class="flex flex-col gap-[1rem] mt-[1rem]">
-                                          <div class="wrapper-inpts flex flex-col gap-[.8rem]
-                                          [&_select]:w-[100%] [&_select]:outline-none [&_select]:cursor-pointer [&>div]:cursor-pointer">
-                                                <div class="room-section p-[.7rem] border border-gray-400 shadow-md rounded-md">
-                                                      <select name="room" id="room-select">
-                                                            <option value="" selected>--Choose Room--</option>
-                                                            {{ range .Rooms }}
-                                                            <option value="{{ . }}">{{ . }}</option>
-                                                            {{ end  }}
-                                                      </select>
-                                                </div>
-                                                <div class="major-section p-[.7rem] border border-gray-400 shadow-md rounded-md">
-                                                      <select name="major" id="major-select">
-                                                            <option value="" selected>--Choose Major--</option>
-                                                            {{ range .Majors }}
-                                                            <option value="{{ . }}">{{ . }}</option>
-                                                            {{ end }}
-                                                      </select>
-                                                </div>
-                                          </div>
-                                          <div class="btns flex flex-col gap-[.8rem]">
-                                                <button type="submit" class="w-[100%] border border-gray-400
-                                                rounded-md shadow-md text-[.8rem] p-[.4rem] font-semibold
-                                                cursor-pointer bg-blue-600 text-white">Filter</button>
-                                                <a href="/students" class="w-[100%] border border-gray-400
-                                                rounded-md shadow-md text-[.8rem] p-[.4rem] font-semibold
-                                                cursor-pointer text-center">Back</a>
-                                          </div>
-                                    </form>
-                              </div>
-                        </div>
-                  </div>
-            </div>
-      </body>
+  <title>RambanBelajar</title>
+  <body hx-ext="response-targets" class="bg-[whitesmoke]">
+    {{ template "loader" . }}
+    <div class="wrapper flex flex-col h-screen">
+      {{ template "webpane-top" . }}
+      <div class="content h-[92%] flex gap-[1rem]">
+        {{ template "webpane-left" . }}
+        <div class="right-section w-[80%] py-[1.5rem] flex flex-col">
+          {{ template "students-card" . }}
+          <div id="error-message"></div>
+        </div>
+    </div>
+  </body>
 </html>
 {{ end }}
 
 {{ block "students-content" . }}
 <div id="students" class="flex flex-wrap content-start gap-[1rem] w-[100%] h-[100%]">
       {{ range .Students }}
-            <a    href="/students/{{ .ID }}/profile"
-                  class="border border-gray-400 shadow-md rounded-md items-center
-                  flex gap-[.8rem] w-[23.5%] h-fit p-[.5rem] text-[.8rem] font-semibold">
-                        <i class="fa-solid fa-image-portrait text-[3.5rem]"></i>
-                        <div class="snippet flex flex-col gap-[.3rem]">
-                              <p class="name text-wrap leading-none capitalize">{{ .Name }}</p>
-                              <p class="nim">{{ .Nim }}</p>
-                        </div>
+            <a  href="/students/{{ .ID }}/profile"
+                class="border border-gray-400 shadow-md rounded-md items-center
+                flex gap-[.8rem] w-[23.5%] h-fit p-[.5rem] text-[.8rem] font-semibold">
+                  <i class="fa-solid fa-image-portrait text-[3.5rem]"></i>
+                  <div class="snippet flex flex-col gap-[.3rem]">
+                        <p class="name text-wrap leading-none capitalize">{{ .Name }}</p>
+                        <p class="nim">{{ .Nim }}</p>
+                  </div>
             </a>
       {{ end }}
 </div>
+{{ end }}
+
+{{ block "students-card" . }}
+  <div
+  id="right-content-card"
+  class="wrapper-content flex flex-col gap-y-[2rem] h-[50vh]
+  opacity-0 transition-opacity duration-500 ease-out
+  rounded shadow-md border border-gray-400 py-[1.5rem] px-[2.5rem]">
+    
+    <div class="flex justify-between items-center">
+      <span class="font-semibold text-[1.1rem]">/students</span>
+      <a
+          href="/admin/panel/students/create"
+          class="flex gap-[.8rem] items-center
+          px-[.8rem] py-[.3rem] text-[.8rem] border border-gray-400
+          rounded shadow-sm hover:bg-blue-600 hover:text-white cursor-pointer">
+          <i class="fa-solid fa-plus"></i>
+          <span>Create Student</span>
+      </a>
+    </div>
+
+    <div class="wrapper-students-content h-[100%] flex justify-between">
+
+        <div class="right-section flex flex-col w-[75%] gap-[1.2rem]">
+              <form action="/admin/panel/students" method="get"
+              class="search-form text-[.8rem] flex justify-between p-[.4rem]
+              border border-gray-400 shadow-sm rounded-sm">
+                    <input type="text" class="search-inpt w-[100%] outline-none pl-[1rem]" id="search"
+                          name="search" placeholder="search student by name or nim">
+                    <button type="submit" class="border border-gray-400 rounded-sm shadow-md
+                      text-[.8rem] p-[.35rem] px-[1rem] font-semibold cursor-pointer bg-blue-600 text-white"
+                      >Search</button>
+              </form>
+                {{ template "students-content" . }}
+        </div>
+
+        <div class="right-section w-[20%]">
+              <div class="filter-section ">
+                  <p class="font-semibold">Filter Students</p>
+                  <form action="/admin/panel/students" method="get" class="flex flex-col gap-[1rem] mt-[1rem]">
+                      <div class="wrapper-inpts flex flex-col gap-[.8rem]
+                      [&_select]:w-[100%] [&_select]:outline-none [&_select]:cursor-pointer [&>div]:cursor-pointer">
+                          <div class="room-section p-[.7rem] border border-gray-400 shadow-md rounded-md">
+                                <select name="room" id="room-select">
+                                      <option value="" selected>--Choose Room--</option>
+                                      {{ range .Rooms }}
+                                      <option value="{{ . }}">{{ . }}</option>
+                                      {{ end  }}
+                                </select>
+                          </div>
+
+                          <div class="major-section p-[.7rem] border border-gray-400 shadow-md rounded-md">
+                                <select name="major" id="major-select">
+                                      <option value="" selected>--Choose Major--</option>
+                                      {{ range .Majors }}
+                                      <option value="{{ . }}">{{ . }}</option>
+                                      {{ end }}
+                                </select>
+                          </div>
+                      </div>
+
+                      <div class="btns flex flex-col gap-[.8rem]">
+                            <button type="submit" class="w-[100%] border border-gray-400
+                            rounded-md shadow-md text-[.8rem] p-[.4rem] font-semibold
+                            cursor-pointer bg-blue-600 text-white">Filter</button>
+                            <a href="/admin/panel/students" class="w-[100%] border border-gray-400
+                            rounded-md shadow-md text-[.8rem] p-[.4rem] font-semibold
+                            cursor-pointer text-center">Back</a>
+                      </div>
+                  </form>
+              </div>
+        </div>
+
+      </div>
+  </div>
 {{ end }}

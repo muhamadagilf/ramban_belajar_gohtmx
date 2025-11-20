@@ -7,24 +7,24 @@ package database
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 )
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (email, password_hash, role)
-VALUES ($1, $2, $3)
-RETURNING id, created_at, updated_at, email, password_hash, role
+INSERT INTO users (email, password_hash)
+VALUES ($1, $2)
+RETURNING id, created_at, updated_at, email, password_hash
 `
 
 type CreateUserParams struct {
 	Email        string
 	PasswordHash string
-	Role         string
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, createUser, arg.Email, arg.PasswordHash, arg.Role)
+	row := q.db.QueryRowContext(ctx, createUser, arg.Email, arg.PasswordHash)
 	var i User
 	err := row.Scan(
 		&i.ID,
@@ -32,13 +32,22 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.UpdatedAt,
 		&i.Email,
 		&i.PasswordHash,
-		&i.Role,
 	)
 	return i, err
 }
 
+const deleteUserByID = `-- name: DeleteUserByID :exec
+DELETE FROM users
+WHERE id = $1
+`
+
+func (q *Queries) DeleteUserByID(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteUserByID, id)
+	return err
+}
+
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, created_at, updated_at, email, password_hash, role FROM users
+SELECT id, created_at, updated_at, email, password_hash FROM users
 WHERE email = $1
 `
 
@@ -51,13 +60,12 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.UpdatedAt,
 		&i.Email,
 		&i.PasswordHash,
-		&i.Role,
 	)
 	return i, err
 }
 
 const getUserById = `-- name: GetUserById :one
-SELECT id, created_at, updated_at, email, password_hash, role FROM users
+SELECT id, created_at, updated_at, email, password_hash FROM users
 WHERE id = $1
 `
 
@@ -70,7 +78,81 @@ func (q *Queries) GetUserById(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.UpdatedAt,
 		&i.Email,
 		&i.PasswordHash,
-		&i.Role,
 	)
 	return i, err
+}
+
+const getUsersAll = `-- name: GetUsersAll :many
+SELECT id, created_at, updated_at, email, password_hash FROM users
+`
+
+func (q *Queries) GetUsersAll(ctx context.Context) ([]User, error) {
+	rows, err := q.db.QueryContext(ctx, getUsersAll)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []User
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Email,
+			&i.PasswordHash,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getUsersAllJoinRoles = `-- name: GetUsersAllJoinRoles :many
+SELECT u.id, u.email, r.role, u.created_at
+FROM users AS u
+JOIN user_roles as r
+  ON u.id = r.user_id
+`
+
+type GetUsersAllJoinRolesRow struct {
+	ID        uuid.UUID
+	Email     string
+	Role      string
+	CreatedAt time.Time
+}
+
+func (q *Queries) GetUsersAllJoinRoles(ctx context.Context) ([]GetUsersAllJoinRolesRow, error) {
+	rows, err := q.db.QueryContext(ctx, getUsersAllJoinRoles)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetUsersAllJoinRolesRow
+	for rows.Next() {
+		var i GetUsersAllJoinRolesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Email,
+			&i.Role,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

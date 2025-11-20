@@ -11,8 +11,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
-	"github.com/muhamadagilf/rambanbelajar_gohtmx/handler"
 	"github.com/muhamadagilf/rambanbelajar_gohtmx/internal/database"
+	"github.com/muhamadagilf/rambanbelajar_gohtmx/utils"
 )
 
 func (config *apiConfig) HandlerGetStudents(c echo.Context) error {
@@ -33,7 +33,7 @@ func (config *apiConfig) HandlerGetStudents(c echo.Context) error {
 	ETag := fmt.Sprintf("%x", sha256.Sum256([]byte(lastModified.Format(time.RFC3339))))
 
 	modifiedSince := c.Request().Header.Get("If-Modifed-Since")
-	if c.Request().Header.Get("If-None-Match") == ETag || handler.IsLastModifiedValid(modifiedSince, lastModified) {
+	if c.Request().Header.Get("If-None-Match") == ETag || utils.IsLastModifiedValid(modifiedSince, lastModified) {
 		return c.NoContent(http.StatusNotModified)
 	}
 
@@ -85,7 +85,7 @@ func (config *apiConfig) HandlerCreateStudent(c echo.Context) error {
 		DateOfBirth string `json:"date_of_birth" validate:"dob_constraints,cheeky_sql_inject"`
 	}
 
-	err := handler.WithTX(ctx, config.Server.DB, qtx, func(qtx *database.Queries) error {
+	err := utils.WithTX(ctx, config.Server.DB, qtx, func(qtx *database.Queries) error {
 		if err := c.Bind(&reqBody); err != nil {
 			return fmt.Errorf("here daddy 63, %v", err.Error())
 		}
@@ -94,15 +94,15 @@ func (config *apiConfig) HandlerCreateStudent(c echo.Context) error {
 			return fmt.Errorf("here daddy 67, %v", err.Error())
 		}
 
-		studentBirthDate, err := time.Parse(handler.DOBLayout, reqBody.DateOfBirth)
+		studentBirthDate, err := time.Parse(utils.DOBLayout, reqBody.DateOfBirth)
 		if err != nil {
 			return fmt.Errorf("here daddy 74, %v", err)
 		}
 
 		birthDateStr := fmt.Sprintf("%v", studentBirthDate.Format(time.DateOnly))
 
-		if !handler.IsNIPValid(reqBody.Nip, birthDateStr) {
-			return errors.New(handler.ERROR_INVALID_NIP)
+		if !utils.IsNIPValid(reqBody.Nip, birthDateStr) {
+			return errors.New(utils.ERROR_INVALID_NIP)
 		}
 
 		// if free nim exists, get the smallest nim for the new created student
@@ -170,7 +170,7 @@ func (config *apiConfig) HandlerDeleteStudent(c echo.Context) error {
 		ID uuid.UUID `param:"id"`
 	}
 
-	err := handler.WithTX(ctx, config.Server.DB, q, func(qtx *database.Queries) error {
+	err := utils.WithTX(ctx, config.Server.DB, q, func(qtx *database.Queries) error {
 		if err := c.Bind(&param); err != nil {
 			return fmt.Errorf("here daddy 142, %v", err.Error())
 		}

@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/muhamadagilf/rambanbelajar_gohtmx/handler/web"
 )
 
 var (
@@ -35,12 +34,12 @@ func NewCustomValidator() *CustomValidator {
 
 	v.RegisterValidation("oneof_major", func(fl validator.FieldLevel) bool {
 		majorStr := fl.Field().String()
-		return slices.Contains(web.MAJOR, majorStr)
+		return slices.Contains(MAJOR, majorStr)
 	})
 
 	v.RegisterValidation("oneof_room", func(fl validator.FieldLevel) bool {
 		roomStr := fl.Field().String()
-		return slices.Contains(web.ROOM, roomStr)
+		return slices.Contains(ROOM, roomStr)
 	})
 
 	v.RegisterValidation("nochars", func(fl validator.FieldLevel) bool {

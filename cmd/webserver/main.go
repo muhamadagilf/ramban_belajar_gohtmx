@@ -28,9 +28,11 @@ func newTemplate() *Templates {
 	}
 }
 
-// example
 func main() {
-	godotenv.Load(".env")
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	portStr := os.Getenv("port")
 	if portStr == "" {
@@ -42,19 +44,25 @@ func main() {
 		log.Fatal(err)
 	}
 
-	defer webCfg.Server.DB.Close()
+	defer func() {
+		if err := webCfg.Server.DB.Close(); err != nil {
+			log.Fatal(err)
+		}
+	}()
 
 	e := echo.New()
-	e.Use(middleware.Logger())
-	e.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(50)))
 
+	// global set up
+	e.Use(middleware.Logger())
 	e.Validator = utils.NewCustomValidator()
 	e.Renderer = newTemplate()
 	e.Static("/static", "static")
 
-	eV1 := e.Group("")
-	eV1.Use(webCfg.MiddlewareAuth)
-	eV1.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
+	// main route (root)
+	mainRoute := e.Group("")
+	mainRoute.Use(webCfg.MiddlewareSession)
+	mainRoute.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
+		CookiePath:     "/",
 		TokenLength:    32,
 		TokenLookup:    "header:X-CSRF-TOKEN,form:_csrf",
 		ContextKey:     "csrf",
@@ -63,20 +71,43 @@ func main() {
 		CookieHTTPOnly: true,
 	}))
 
-	eV1.GET("/login", webCfg.GetLoginPage)
-	eV1.POST("/login", webCfg.LetUserLogin, utils.LoginLimiter)
-	eV1.POST("/logout", webCfg.LetUserLogout)
-	eV1.GET("/students/submission", webCfg.GetStudentSubmitPage)
-	eV1.POST("/students/submission", webCfg.CreateStudent, webCfg.MiddlewareStudent)
+	mainRoute.Use(webCfg.MiddlewareAuthN)
+	mainRoute.Use(webCfg.Server.MiddlewareAuthZ)
+	mainRoute.Use(utils.MiddlewareUserRateLimiter)
+	mainRoute.Use(utils.MiddlewareAPIRateLimiter)
 
-	eV1.GET("/", webCfg.GetHomePage)
-	eV1.GET("/students/:id/profile", webCfg.GetStudentProfile)
-	eV1.GET("/students/:id/profile/update", webCfg.GetUpdateStudentPage)
-	eV1.PUT("/students/:id/profile/update", webCfg.UpdateStudent)
+	mainRoute.GET("/login", webCfg.GetLoginPage)
+	mainRoute.POST("/login", webCfg.Login("/", utils.USER_ROLE_STUDENT))
+	mainRoute.POST("/logout", webCfg.Logout("/login"))
 
-	// NOTE: admin level
-	e.GET("/students", webCfg.GetStudentsPage)
-	e.DELETE("/students/:id/profile", webCfg.DeleteStudent)
+	mainRoute.GET("/", webCfg.GetHomePage)
+
+	mainRoute.GET("/students/:id/profile", webCfg.GetStudentProfile)
+	mainRoute.GET("/students/:id/profile/update", webCfg.GetUpdateStudentPage)
+	mainRoute.PUT("/students/:id/profile/update", webCfg.UpdateStudent)
+
+	// admin route
+	adminRoute := mainRoute.Group("/admin")
+	adminRoute.GET("/login", webCfg.GetAdminLoginPage)
+	adminRoute.POST("/login", webCfg.Login("/admin/panel", utils.USER_ROLE_ADMIN))
+	adminRoute.POST("/logout", webCfg.Logout("/admin/login"))
+
+	adminRoute.GET("/panel", webCfg.GetAdminPanelPage)
+
+	adminRoute.GET("/panel/users", webCfg.GetUsersPage)
+	adminRoute.POST("/panel/users/create", webCfg.CreateUser)
+
+	adminRoute.GET("/panel/students", webCfg.GetStudentsPage)
+	adminRoute.GET("/panel/students/create", webCfg.GetStudentSubmitPage)
+	adminRoute.POST("/panel/students/create", webCfg.CreateStudent, webCfg.MiddlewareStudent)
+	adminRoute.GET("/panel/students/:id/view", webCfg.GetStudentProfile)
+	adminRoute.DELETE("/panel/students/:id/delete", webCfg.DeleteStudent)
+
+	// SPAWN LIMITER CONTAINERS CLEANUP GOROUTINE
+	utils.CleanupLimiterContainersWatcher()
+
+	// SPAWN STALE USER SESSION CLEANER
+	webCfg.Server.CleanStaleUserSessions()
 
 	e.Logger.Fatal(e.Start(":" + portStr))
 }

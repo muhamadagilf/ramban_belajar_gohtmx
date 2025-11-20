@@ -13,7 +13,6 @@ import (
 )
 
 func main() {
-
 	godotenv.Load(".env")
 
 	handlerFunc, err := api.NewApiConfig()
@@ -49,6 +48,7 @@ func main() {
 	routerV1.GET("/students/get/:id", handlerFunc.HandlerGetStudentByID)
 	routerV1.DELETE("/students/delete/:id", handlerFunc.HandlerDeleteStudent)
 
-	e.Logger.Fatal(e.Start(":" + "8080"))
+	routerV1.POST("/admin/superuser/create", handlerFunc.HandlerCreateUserAdmin)
 
+	e.Logger.Fatal(e.Start(":" + "3000"))
 }

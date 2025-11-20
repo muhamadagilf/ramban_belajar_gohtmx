@@ -11,10 +11,17 @@ WHERE session_id = $1;
 SELECT * FROM sessions
 WHERE session_id = $1;
 
+-- name: GetSessionIDAll :many
+SELECT id, last_activity FROM sessions;
+
 -- name: UpdateLastActivityUserSession :exec
 UPDATE sessions
 SET last_activity = NOW()
 WHERE session_id = $1;
+
+-- name: DeleteSessionByID :exec
+DELETE FROM sessions
+WHERE id = $1;
 
 -- name: UpdateRevokeStatusUserSession :exec
 UPDATE sessions

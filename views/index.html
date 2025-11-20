@@ -1,53 +1,25 @@
-{{ block "index" . }}
-
+{{ block "home" . }}
 <!DOCTYPE html>
 <html>
-    {{ template "head" . }}
-    <title>RambanBelajar</title>
-      <body class="bg-[whitesmoke]">
-      {{ template "loader" . }}
-            <div
-                  id="wrapper-content"
-                  class="flex gap-[1rem]"
-            >
-                  <div id="left-section-sidebar"
-                        class="w-[20%] h-screen p-[2rem] flex flex-col items-center justify-between
-                        border border-gray-300 shadow-sm bg-[#fff]">
-                        <div class="logo flex gap-[.8rem]
-                        text-[1.3rem] items-center">
-                            <i class="fa-solid fa-graduation-cap"></i>
-                            <span class="font-semibold">RambanBelajar</span>
-                        </div>
-                        <div class="flex flex-col gap-[1rem] items-center">
-                            <a href="/students/{{ .User.ID }}/profile"
-                              class="text-[.7rem] flex gap-[.8rem] items-center
-                              px-[.8rem] py-[.5rem] bg-gray-300 rounded cursor-pointer">
-                              <i class="fa-solid fa-user"></i>
-                              <span>Profile</span>
-                            </a>
-                            <form hx-POST="/logout" hx-indicator="#loader-indicator"
-                              class="font-semibold text-[.7rem]">
-                              <input type="hidden" name="_csrf" value="{{ .CSRF_Token }}">
-                              <button
-                                type="submit"
-                                class="flex gap-[.8rem] items-center
-                                px-[.8rem] py-[.5rem] bg-gray-300 rounded cursor-pointer">
-                                <i class="fa-solid fa-person-running"></i>
-                                GetOut
-                              </button>
-                            </form>
-                        </div>
-                  </div>
-                  <div id="right-section-content"
-                        class="w-[80%] flex justify-center mt-[1.5rem]">
-                        <div class="top-section">
-                            <p class="mt-[1rem] bg-green-300 border-[2px] border-green-600
-                                px-[3rem] py-[1rem] rounded-sm text-[.8rem] text-green-800">
-                                Welcome <span class="font-bold">{{ .User.Name }}.</span> Youre Presence is Expected by Greatness
-                            </p>
-                        </div>
-                  </div>
+  {{ template "head" . }}
+  <title>RambanBelajar</title>
+  <body hx-ext="response-targets" class="bg-[whitesmoke]">
+    {{ template "loader" . }}
+    <div class="wrapper flex flex-col h-screen">
+      {{ template "webpane-top" . }}
+      <div class="content h-[92%] flex gap-[1rem]">
+
+        {{ template "webpane-left" . }}
+
+        <div id="right-section-content" class="w-[80%] flex flex-col items-center mt-[1.5rem]">
+            <div class="top-section">
+                <p class="mt-[1rem] border-[2px] border-gray-400 px-[3rem] py-[1rem] rounded-sm text-[.8rem] shadow">
+                  Welcome Youre Presence is Expected by Greatness
+                </p>
             </div>
-      </body>
+        </div>
+
+    </div>
+  </body>
 </html>
 {{ end }}

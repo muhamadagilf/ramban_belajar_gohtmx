@@ -3,8 +3,10 @@
 <html>
   {{ template "head" . }}
   <title>Students</title>
-  <body class="flex justify-center items-center h-screen bg-[whitesmoke]">
+  <body hx-ext="response-targets"
+    class="flex justify-center items-center h-screen bg-[whitesmoke]">
     {{ template "loader" . }}
+    <div id="error-message"></div>
     <div
             id="wrapper-content"
             class="wrapper-content w-[90%] h-[80%] flex flex-col gap-y-[1rem]
@@ -34,6 +36,13 @@
                               href="/students/{{ .Student.ID }}/profile/update">
                               <i class="fa-solid fa-user-pen"></i>
                         </a>
+                        {{ if eq .UserRole "admin" }}
+                        <a  hx-delete="/admin/panel/students/{{ .Student.UserID }}/delete"
+                            hx-indicator="#loader-indicator"
+                            hx-target-error="#error-message">
+                            <i class="fa-solid fa-trash"></i>
+                        </a>
+                        {{ end }}
                   </div>
             </div>
             <div class="right-section flex gap-[1rem] border border-gray-400 shadow-md rounded-md p-[.5rem]">

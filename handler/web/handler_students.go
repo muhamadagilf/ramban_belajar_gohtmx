@@ -1,8 +1,7 @@
-// Package web HandlerFunc
+// Package web
 package web
 
 import (
-	"crypto/sha256"
 	"errors"
 	"fmt"
 	"log"
@@ -12,21 +11,58 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
-	"github.com/muhamadagilf/rambanbelajar_gohtmx/handler"
 	"github.com/muhamadagilf/rambanbelajar_gohtmx/internal/database"
+	"github.com/muhamadagilf/rambanbelajar_gohtmx/internal/server"
+	"github.com/muhamadagilf/rambanbelajar_gohtmx/utils"
 )
 
 func (config *webConfig) GetStudentSubmitPage(c echo.Context) error {
-	CSRFToken := c.Get("csrf").(string)
+	CSRFToken, ok := c.Get("csrf").(string)
+	if !ok {
+		return c.String(
+			http.StatusInternalServerError,
+			"Internal Server Error, Contact Support with code:ERR21500",
+		)
+	}
+
+	claims, ok := c.Get("claims").(*server.Claims)
+	if !ok {
+		return c.String(
+			http.StatusInternalServerError,
+			"Internal Server Error, Contact Support with code:ERR22500",
+		)
+	}
+
+	if allowed, _ := config.Server.Can(claims, "studentCreatePage", "view"); !allowed {
+		return c.Render(http.StatusUnauthorized, "unauthorized", Data{
+			"Message": utils.ERROR_USER_UNAUTHORIZED,
+		})
+	}
+
 	return c.Render(http.StatusOK, "student-submission", Data{
-		"Major":      MAJOR,
+		"Major":      utils.MAJOR,
 		"CSRF_Token": CSRFToken,
 	})
 }
 
 func (config *webConfig) CreateStudent(c echo.Context) error {
-	time.Sleep(300 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 	ctx := c.Request().Context()
+
+	claims, ok := c.Get("claims").(*server.Claims)
+	if !ok {
+		return c.String(
+			http.StatusInternalServerError,
+			"Internal Server Error, Contact Support with code:ERR22500",
+		)
+	}
+
+	if allowed, _ := config.Server.Can(claims, "students", "create"); !allowed {
+		return c.Render(http.StatusUnauthorized, "unauthorized", Data{
+			"Message": utils.ERROR_USER_UNAUTHORIZED,
+		})
+	}
+
 	type formParams struct {
 		Name            string `validate:"name_constraints,cheeky_sql_inject"`
 		Email           string `validate:"email_constraints,cheeky_sql_inject"`
@@ -37,7 +73,7 @@ func (config *webConfig) CreateStudent(c echo.Context) error {
 		ConfirmPassword string `validate:"password_constraints"`
 	}
 
-	err := handler.WithTX(ctx, config.Server.DB, config.Server.Queries, func(qtx *database.Queries) error {
+	err := utils.WithTX(ctx, config.Server.DB, config.Server.Queries, func(qtx *database.Queries) error {
 		params := formParams{
 			Name:            c.FormValue("fullname"),
 			Email:           c.FormValue("email"),
@@ -53,11 +89,11 @@ func (config *webConfig) CreateStudent(c echo.Context) error {
 		}
 
 		if params.Password != params.ConfirmPassword {
-			return errors.New(handler.ERROR_INVALID_CONFIRM_PASSWORD)
+			return errors.New(utils.ERROR_INVALID_CONFIRM_PASSWORD)
 		}
 
-		if !handler.IsNIPValid(params.Nip, params.DateOfBirth) {
-			return errors.New(handler.ERROR_INVALID_NIP)
+		if !utils.IsNIPValid(params.Nip, params.DateOfBirth) {
+			return errors.New(utils.ERROR_INVALID_NIP)
 		}
 
 		studentBirthDate, err := time.Parse(time.DateOnly, params.DateOfBirth)
@@ -82,7 +118,7 @@ func (config *webConfig) CreateStudent(c echo.Context) error {
 		}
 
 		// hash the user password
-		hashedPassword, err := handler.HashPassword(params.Password)
+		hashedPassword, err := utils.HashPassword(params.Password)
 		if err != nil {
 			return err
 		}
@@ -91,7 +127,6 @@ func (config *webConfig) CreateStudent(c echo.Context) error {
 		user, err := qtx.CreateUser(ctx, database.CreateUserParams{
 			Email:        params.Email,
 			PasswordHash: hashedPassword,
-			Role:         handler.USER_ROLE_STUDENT,
 		})
 		if err != nil {
 			return err
@@ -105,7 +140,7 @@ func (config *webConfig) CreateStudent(c echo.Context) error {
 			Email:       params.Email,
 			PhoneNumber: params.PhoneNumber,
 			DateOfBirth: studentBirthDate,
-			Year:        int32(YEAR),
+			Year:        int32(time.Now().Year()),
 			StudyPlanID: studentDat.StudyPlan.ID,
 			RoomID:      studentDat.Room.ID,
 			UserID:      user.ID,
@@ -114,29 +149,41 @@ func (config *webConfig) CreateStudent(c echo.Context) error {
 			return err
 		}
 
-		// add the student to the classroom
-		err = qtx.SetStudentClassroom(ctx, database.SetStudentClassroomParams{
-			RoomID:    student.RoomID,
-			StudentID: student.ID,
+		// assign student role
+		_, err = qtx.CreateUserRoles(ctx, database.CreateUserRolesParams{
+			UserID: user.ID,
+			Role:   utils.USER_ROLE_STUDENT,
 		})
 		if err != nil {
 			return err
 		}
 
+		// add the student to the classroom
+		if err = qtx.SetStudentClassroom(ctx, database.SetStudentClassroomParams{
+			RoomID:    student.RoomID,
+			StudentID: student.ID,
+		}); err != nil {
+			return nil
+		}
+
 		// updated the collection_meta "-StudentCount", increment the count
 		// to keep track of the member of class
 		studentClassCount := studentDat.StudyPlan.Major + "-StudentCount"
-		qtx.IncrementValueByname(ctx, studentClassCount)
+		if err = qtx.IncrementValueByname(ctx, studentClassCount); err != nil {
+			return err
+		}
 
 		// update updated_at for Last-Modified Header (caching)
-		qtx.UpdateCollectionMetaLastModified(ctx, "student-coll")
+		if err = qtx.UpdateCollectionMetaLastModified(ctx, "student-coll"); err != nil {
+			return err
+		}
 
 		return nil
 	})
 	if err != nil {
 		c.Render(http.StatusUnprocessableEntity, "student-submission", Data{})
 		return c.Render(http.StatusUnprocessableEntity, "error-message", Data{
-			"Message": handler.ValidationErrorMsg(err.Error()),
+			"Message": utils.ValidationErrorMsg(err.Error()),
 		})
 	}
 
@@ -144,93 +191,39 @@ func (config *webConfig) CreateStudent(c echo.Context) error {
 	return c.NoContent(http.StatusCreated)
 }
 
-func (config *webConfig) GetStudentsPage(c echo.Context) error {
-	ctx := c.Request().Context()
-
-	// retrieves all the necessary data, including query params handling
-	// do some filter & search querying
-	studentsPageData, err := studentsQueryParamHandler(c, config.Server.Queries)
-	if err != nil {
-		return c.String(
-			http.StatusBadRequest,
-			fmt.Sprintf("Dont tryna act smart now, you cheeky bastard. \n%v",
-				err.Error()),
-		)
-	}
-
-	studentsPageData["Rooms"] = ROOM
-	studentsPageData["Majors"] = MAJOR
-
-	// do validation based caching
-	lastModified, err := config.Server.Queries.GetCollectionMetaLastModified(ctx, "student-coll")
-	if err != nil {
-		return c.String(http.StatusBadRequest, err.Error())
-	}
-
-	ETag := fmt.Sprintf("%x", sha256.Sum256([]byte(lastModified.Format(time.RFC3339))))
-
-	modifiedSince := c.Request().Header.Get("If-Modified-Since")
-	if c.Request().Header.Get("If-None-Match") == ETag || handler.IsLastModifiedValid(modifiedSince, lastModified) {
-		return c.NoContent(http.StatusNotModified)
-	}
-
-	c.Response().Header().Set("ETag", ETag)
-	c.Response().Header().Set("Last-Modified", lastModified.UTC().Format(http.TimeFormat))
-	c.Response().Header().Set("Cache-Control", "no-cache")
-
-	return c.Render(http.StatusOK, "students", studentsPageData)
-}
-
-func (config *webConfig) DeleteStudent(c echo.Context) error {
-	time.Sleep(300 * time.Millisecond)
-	ctx := c.Request().Context()
-	err := handler.WithTX(ctx, config.Server.DB, config.Server.Queries, func(qtx *database.Queries) error {
-		idStr := c.Param("id")
-
-		id, err := uuid.Parse(idStr)
-		if err != nil {
-			return err
-		}
-
-		student, err := qtx.DeleteStudentById(ctx, id)
-		if err != nil {
-			return err
-		}
-
-		// updated the collection_meta "-StudentCount"
-		// decrement the student count, if there is deletion
-		studentPlan, _ := qtx.GetStudyPlanById(ctx, student.StudyPlanID)
-		studentClassCount := studentPlan.Major + "-StudentCount"
-		qtx.DecrementValueByName(ctx, studentClassCount)
-
-		// simply, add the nim to freelist, if there is student deletion
-		qtx.AddToFreelist(ctx, student.Nim)
-
-		// update updated_at for Last-Modified Header (caching)
-		err = qtx.UpdateCollectionMetaLastModified(ctx, "student-coll")
-		if err != nil {
-			return err
-		}
-
-		return nil
-	})
-	if err != nil {
-		c.Render(http.StatusUnprocessableEntity, "students", Data{})
-		return c.Render(http.StatusUnprocessableEntity, "error-message", Data{
-			"Message": err.Error(),
-		})
-	}
-
-	c.Response().Header().Set("HX-Redirect", "/students")
-	return c.NoContent(http.StatusOK)
-}
-
 func (config *webConfig) GetStudentProfile(c echo.Context) error {
 	ctx := c.Request().Context()
 	query := config.Server.Queries
-	userID := c.Get("user_id").(uuid.UUID)
 
-	student, err := query.GetStudentByUserId(ctx, userID)
+	IDStr := c.Param("id")
+	paramUserID, err := uuid.Parse(IDStr)
+	if err != nil {
+		return c.String(
+			http.StatusInternalServerError,
+			"Internal Server Error, Contact Support with code:ERR44500",
+		)
+	}
+
+	claims, ok := c.Get("claims").(*server.Claims)
+	if !ok {
+		return c.String(
+			http.StatusInternalServerError,
+			"Internal Server Error, Contact Support with code:ERR22500",
+		)
+	}
+
+	switch claims.Roles[0] {
+	case utils.USER_ROLE_STUDENT:
+		if claims.UserID != paramUserID {
+			return c.Render(http.StatusUnauthorized, "unauthorized", Data{})
+		}
+	}
+
+	if allowed, _ := config.Server.Can(claims, "students", "view"); !allowed {
+		return c.Render(http.StatusUnauthorized, "unauthorized", Data{})
+	}
+
+	student, err := query.GetStudentByUserId(ctx, claims.UserID)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
@@ -247,21 +240,20 @@ func (config *webConfig) GetStudentProfile(c echo.Context) error {
 
 	// validation based caching
 	lastModified := student.UpdatedAt
-	ETag := fmt.Sprintf("%x", sha256.Sum256([]byte(lastModified.Format(time.RFC3339))))
 
-	modifiedSince := c.Request().Header.Get("If-Modified-Since")
-	if c.Request().Header.Get("If-None-Match") == ETag || handler.IsLastModifiedValid(modifiedSince, lastModified) {
+	valid, ETag := IsCacheValid(c, lastModified)
+	if valid {
 		return c.NoContent(http.StatusNotModified)
 	}
 
 	c.Response().Header().Set("ETag", ETag)
 	c.Response().Header().Set("Last-Modified", lastModified.UTC().Format(http.TimeFormat))
 	c.Response().Header().Set("Cache-Control", "no-cache")
-
 	return c.Render(http.StatusOK, "student-profile", Data{
-		"Student": student,
-		"Plan":    plan,
-		"Room":    room,
+		"Student":  student,
+		"Plan":     plan,
+		"Room":     room,
+		"UserRole": claims.Roles[0],
 	})
 }
 
@@ -297,7 +289,7 @@ func (config *webConfig) UpdateStudent(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
-	err = handler.WithTX(ctx, config.Server.DB, query, func(qtx *database.Queries) error {
+	err = utils.WithTX(ctx, config.Server.DB, query, func(qtx *database.Queries) error {
 		params := formParams{
 			Email:       c.FormValue("email"),
 			PhoneNumber: c.FormValue("phone"),
@@ -325,11 +317,120 @@ func (config *webConfig) UpdateStudent(c echo.Context) error {
 	if err != nil {
 		c.Render(http.StatusUnprocessableEntity, "update-student", Data{})
 		return c.Render(http.StatusUnprocessableEntity, "error-message", Data{
-			"Message": handler.ValidationErrorMsg(err.Error()),
+			"Message": utils.ValidationErrorMsg(err.Error()),
 		})
 	}
 
 	redirectURL := fmt.Sprintf("/students/%v/profile", student.ID)
 	c.Response().Header().Set("HX-Redirect", redirectURL)
+	return c.NoContent(http.StatusOK)
+}
+
+// NOTE: admin level utilsFunc
+
+func (config *webConfig) GetStudentsPage(c echo.Context) error {
+	ctx := c.Request().Context()
+	CSRFToken, ok := c.Get("csrf").(string)
+	if !ok {
+		return c.String(
+			http.StatusInternalServerError,
+			"Internal Server Error, at debug_block_getstudents:1",
+		)
+	}
+
+	claims, ok := c.Get("claims").(*server.Claims)
+	if !ok {
+		return c.String(
+			http.StatusInternalServerError,
+			"Internal Server Error, Contact Support with code:ERR20500",
+		)
+	}
+
+	if allowed, _ := config.Server.Can(claims, "adminPanelPages", "view"); !allowed {
+		return c.Render(http.StatusUnauthorized, "unauthorized", Data{
+			"Message": utils.ERROR_USER_UNAUTHORIZED,
+		})
+	}
+
+	// retrieves all the necessary data, including query params handling
+	// do some filter & search querying
+	studentsPageData, err := studentsQueryParamHandler(c, config.Server.Queries)
+	if err != nil {
+		return c.String(http.StatusUnprocessableEntity, err.Error())
+	}
+
+	studentsPageData["Rooms"] = utils.ROOM
+	studentsPageData["Majors"] = utils.MAJOR
+	studentsPageData["CSRF_Token"] = CSRFToken
+	studentsPageData["UserRole"] = claims.Roles[0]
+
+	// do validation based caching
+	lastModified, err := config.Server.Queries.GetCollectionMetaLastModified(ctx, "student-coll")
+	if err != nil {
+		return c.String(http.StatusBadRequest, err.Error())
+	}
+
+	valid, ETag := IsCacheValid(c, lastModified)
+	if valid {
+		return c.NoContent(http.StatusNotModified)
+	}
+
+	c.Response().Header().Set("ETag", ETag)
+	c.Response().Header().Set("Last-Modified", lastModified.UTC().Format(http.TimeFormat))
+	c.Response().Header().Set("Cache-Control", "no-cache")
+	return c.Render(http.StatusOK, "db-students-panel", studentsPageData)
+}
+
+func (config *webConfig) DeleteStudent(c echo.Context) error {
+	time.Sleep(300 * time.Millisecond)
+	ctx := c.Request().Context()
+	err := utils.WithTX(ctx, config.Server.DB, config.Server.Queries, func(qtx *database.Queries) error {
+		idStr := c.Param("id")
+		id, err := uuid.Parse(idStr)
+		if err != nil {
+			return err
+		}
+
+		student, err := qtx.DeleteStudentById(ctx, id)
+		if err != nil {
+			return err
+		}
+
+		err = qtx.DeleteUserByID(ctx, student.UserID)
+		if err != nil {
+			return err
+		}
+
+		// updated the collection_meta "-StudentCount"
+		// decrement the student count, if there is deletion
+		studentPlan, err := qtx.GetStudyPlanById(ctx, student.StudyPlanID)
+		if err != nil {
+			return err
+		}
+
+		studentClassCount := studentPlan.Major + "-StudentCount"
+		if err = qtx.DecrementValueByName(ctx, studentClassCount); err != nil {
+			return err
+		}
+
+		// simply, add the nim to freelist, if there is student deletion
+		if err = qtx.AddToFreelist(ctx, student.Nim); err != nil {
+			return err
+		}
+
+		// update updated_at for Last-Modified Header (caching)
+		if err = qtx.UpdateCollectionMetaLastModified(ctx, "student-coll"); err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return c.Render(http.StatusUnprocessableEntity, "error-message", Data{
+			"Message": err.Error(),
+		})
+	}
+
+	c.Response().Header().Set("HX-Redirect", "/admin/panel/students")
 	return c.NoContent(http.StatusOK)
 }
